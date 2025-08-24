@@ -15,19 +15,22 @@ use App\Http\Controllers\AuthController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
 
 Route::group([
  
     // 'middleware' => 'auth:api',
     'prefix' => 'auth'
- 
 ], function ($router) {
-    Route::post('/register', [AuthController::class, 'register'])->name('register');
     Route::post('/login', [AuthController::class, 'login'])->name('login');
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    Route::post('/refresh', [AuthController::class, 'refresh'])->name('refresh');
-    Route::post('/me', [AuthController::class, 'me'])->name('me');
+    Route::middleware(['auth:api'])->group(function () {
+        Route::post('/register', [AuthController::class, 'register'])->name('register');
+        Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+        Route::post('/refresh', [AuthController::class, 'refresh'])->name('refresh');
+        Route::post('/me', [AuthController::class, 'me'])->name('me');
+        Route::get('/users', [App\Http\Controllers\UserController::class, 'index'])->name('users.index');
+    });
+    
 });

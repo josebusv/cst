@@ -3,6 +3,10 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\EmpresaController;
+use App\Http\Controllers\SedeController;
+use App\Http\Controllers\ClienteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,7 +34,10 @@ Route::group([
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
         Route::post('/refresh', [AuthController::class, 'refresh'])->name('refresh');
         Route::post('/me', [AuthController::class, 'me'])->name('me');
-        Route::get('/users', [App\Http\Controllers\UserController::class, 'index'])->name('users.index');
+        Route::apiResource('users', UserController::class);
+        Route::apiResource('empresas', EmpresaController::class);
+        Route::apiResource('sedes', SedeController::class);
+        Route::apiResource('clientes', ClienteController::class);
     });
     
 });

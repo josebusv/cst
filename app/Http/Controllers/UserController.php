@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Http\Resources\UserTransformedResource;
 use Illuminate\Support\Facades\Gate;
 use App\Policies\UserPolicy;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
@@ -15,12 +15,32 @@ class UserController extends Controller
      */
     public function index()
     {
-        $this->authorize('viewAny', User::class);
         
-        $users = User::with('sede:nombre')
-        ->select('name', 'email', 'telefono')
-        ->paginate(5);
-        return UserTransformedResource::collection($users);
+        $users = User::with('sede:id,nombre')
+        ->select('id', 'name', 'email', 'telefono', 'sede_id')
+        ->paginate(15);
+
+        $users->getCollection()->transform(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'telefono' => $user->telefono,
+                'sede' => $user->sede ? $user->sede->nombre : null,
+            ];
+        });
+
+        return response()->json([
+            'data' => $users->items(),
+            'meta' => [
+                'current_page' => $users->currentPage(),
+                'last_page' => $users->lastPage(),
+                'per_page' => $users->perPage(),
+                'total' => $users->total(),
+                'next_page_url' => $users->nextPageUrl(),
+                'prev_page_url' => $users->previousPageUrl(),
+            ],
+        ]);;
 
     }
 
@@ -29,7 +49,28 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6',
+            'telefono' => 'nullable|string|max:20',
+            'sede_id' => 'nullable|exists:sedes,id',
+        ]);
+
+        $validated['password'] = Hash::make($validated['password']);
+
+        $user = User::create($validated);
+
+        return response()->json([
+            'message' => 'Usuario creado exitosamente',
+            'data' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'telefono' => $user->telefono,
+                'sede' => $user->sede ? $user->sede->nombre : null,
+            ],
+        ], 201);
     }
 
     /**
@@ -37,7 +78,23 @@ class UserController extends Controller
      */
     public function show(string $id)
     {
-        //
+
+        Log::info("Mostrando usuario con ID: $id");
+        $user = User::with('sede:id,nombre')->find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
+        return response()->json([
+            'data' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'telefono' => $user->telefono,
+                'sede' => $user->sede ? $user->sede->nombre : null,
+            ],
+        ]);
     }
 
     /**
@@ -45,7 +102,36 @@ class UserController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|email|unique:users,email,' . $id,
+            'password' => 'sometimes|required|string|min:6',
+            'telefono' => 'nullable|string|max:20',
+            'sede_id' => 'nullable|exists:sedes,id',
+        ]);
+
+        if (isset($validated['password'])) {
+            $validated['password'] = Hash::make($validated['password']);
+        }
+
+        $user->update($validated);
+
+        return response()->json([
+            'message' => 'Usuario actualizado exitosamente',
+            'data' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'telefono' => $user->telefono,
+                'sede' => $user->sede ? $user->sede->nombre : null,
+            ],
+        ]);
     }
 
     /**
@@ -53,6 +139,14 @@ class UserController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
+        $user->delete();
+
+        return response()->json(['message' => 'Usuario eliminado exitosamente']);
     }
 }

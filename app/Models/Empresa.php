@@ -32,7 +32,7 @@ class Empresa extends Model
 
     public function sedes()
     {
-        return $this->hasMany(Sede::class);
+        return $this->hasMany(Sede::class, 'empresa_id');
     }
 
 }

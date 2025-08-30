@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\Municipio;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Sede>
@@ -18,6 +19,7 @@ class SedeFactory extends Factory
      */
     public function definition(): array
     {
+        $municipio = Municipio::inRandomOrder()->first();
         return [
             'nombre' => $this->faker->companySuffix . ' Sede',
             'direccion' => $this->faker->address,
@@ -25,8 +27,8 @@ class SedeFactory extends Factory
             'empresa_id' => \App\Models\Empresa::all()->random()->id, // Assuming Empresa model exists and has records
             'email' => $this->faker->unique()->safeEmail,
             'activo' => $this->faker->boolean,
-            'departamento_id' => $this->faker->numberBetween(1, 10), // Assuming valid departamento IDs
-            'municipio_id' => $this->faker->numberBetween(1, 100), // Assuming valid municipio IDs
+            'departamento_id' => $municipio->departamento_id,
+            'municipio_id' => $municipio->id,
             'created_by' => null,
             'updated_by' => null,
             'deleted_by' => null,

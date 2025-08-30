@@ -15,6 +15,9 @@ return new class extends Migration
     {
         Schema::create('municipios', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('departamento_id')->constrained('departamentos')->onDelete('cascade');
+            $table->string('nombre');
+            $table->string('codigo')->unique();
             $table->timestamps();
         });
     }

@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('telefono')->nullable();
             $table->string('email')->nullable();
             $table->foreignId('empresa_id')->constrained('empresas')->onDelete('cascade');
+            $table->boolean('principal')->default(false);
             $table->boolean('activo')->default(true);
             $table->bigInteger('created_by')->nullable();
             $table->bigInteger('updated_by')->nullable();

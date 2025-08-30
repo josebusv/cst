@@ -4,18 +4,17 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Sede;
-use App\Models\Empresa;
+use Illuminate\Support\Facades\DB;
 
-
-class SedeSeeder extends Seeder
+class DepartamentoSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        Sede::factory()->count(1000)->create();
-
+        //Ruta SQL File
+        $sql = database_path('./sql/departamentos.sql');
+        DB::unprepared(file_get_contents($sql));
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Cliente;
+use Illuminate\Support\Facades\DB;
 
 class ClienteController extends Controller
 {
@@ -50,7 +51,46 @@ class ClienteController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'nit' => 'required|integer|unique:empresas,nit',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'nombresede' => 'required|string|max:255',
+            'direccion' => 'required|string|max:255',
+            'telefono' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255',
+            'departamento_id'   =>  'required|integer|exists:departamentos,id',
+            'municipio_id'      =>  'required|integer|exists:municipios,id',
+        ]);
+        DB::beginTransaction();
+        try {
+            $cliente = new Cliente();
+            $cliente->nombre = $validated['nombre'];
+            $cliente->nit = $validated['nit'];
+            $cliente->logo = $validated['logo']->store('logos', 'public');
+            $cliente->save();
+
+        $cliente->sedes()->create([
+            'nombre' => $validated['nombresede'],
+            'direccion' => $validated['direccion'],
+            'telefono' => $validated['telefono'],
+            'email' => $validated['email'],
+            'departamento_id' => $validated['departamento_id'],
+            'municipio_id' => $validated['municipio_id'],
+        ]);
+
+        DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 'Error al crear el cliente',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+
+        return response()->json([
+            'data' => $cliente,
+        ], 201);
     }
 
     /**

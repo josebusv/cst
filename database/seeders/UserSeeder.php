@@ -21,9 +21,6 @@ class UserSeeder extends Seeder
             'is_active' => 1
         ]);
 
-        
-        User::factory(100)->create([
-
-        ]);
+        User::factory(1000)->create();
     }
 }

@@ -9,10 +9,11 @@ use Illuminate\Notifications\Notifiable;
 // use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Spatie\Permission\Traits\HasRoles;
+use \Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, Notifiable, HasRoles, softDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -68,6 +69,18 @@ class User extends Authenticatable implements JWTSubject
 
     public function sede()
     {
-        return $this->belongsTo(Sede::class);
+        return $this->belongsTo(Sede::class, 'sede_id', 'id');
+    }
+
+    public function empresa()
+    {
+        return $this->hasOneThrough(
+        Empresa::class,    // Modelo destino
+        Sede::class,       // Modelo intermedio
+        'empresa_id',      // Foreign key en sedes que referencia a empresas.id
+        'id',              // Foreign key en empresas que referencia a sedes.empresa_id
+        'sede_id',         // Local key en users
+        'id'              // Local key en sedes
+    );
     }
 }

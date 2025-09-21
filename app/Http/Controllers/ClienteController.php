@@ -27,7 +27,8 @@ class ClienteController extends Controller
                                 'nombre' => $sede->nombre,
                                 'direccion'=> $sede->direccion,
                                 'telefono'=> $sede->telefono,
-                                'email'=> $sede->email
+                                'email'=> $sede->email,
+                                'tipo_sede' => $sede->principal ? 'Principal' : 'Secundaria',
                         ];
                     }),
                 ];
@@ -54,7 +55,7 @@ class ClienteController extends Controller
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
             'nit' => 'required|integer|unique:empresas,nit',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'nombresede' => 'required|string|max:255',
             'direccion' => 'required|string|max:255',
             'telefono' => 'required|string|max:255',
@@ -98,22 +99,24 @@ class ClienteController extends Controller
      */
     public function show(string $id)
     {
-        $cliente = Cliente::with('sedes')->findOrFail($id);
+        $cliente = Cliente::with(['sedes.departamento', 'sedes.municipio'])->findOrFail($id);
 
         return response()->json([
             'data' => [
                 'id' => $cliente->id,
-                    'nombre' => $cliente->nombre,
-                    'logo' => $cliente->logo,
-                    'sedes' => $cliente->sedes->map(function ($sede) {
-                        return [
-                                'id' => $sede->id,
-                                'nombre' => $sede->nombre,
-                                'direccion'=> $sede->direccion,
-                                'telefono'=> $sede->telefono,
-                                'email'=> $sede->email
-                        ];
-                    }),
+                'nombre' => $cliente->nombre,
+                'logo' => $cliente->logo ? asset('storage/' . $cliente->logo) : null,
+                'sedes' => $cliente->sedes->map(function ($sede) {
+                    return [
+                        'id' => $sede->id,
+                        'nombre' => $sede->nombre,
+                        'direccion' => $sede->direccion,
+                        'telefono' => $sede->telefono,
+                        'email' => $sede->email,
+                        'departamento' => $sede->departamento ? $sede->departamento->nombre : null,
+                        'municipio' => $sede->municipio ? $sede->municipio->nombre : null,
+                    ];
+                }),
             ]
         ]);
     }
@@ -123,7 +126,28 @@ class ClienteController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $cliente = Cliente::find($id);
+
+        if (!$cliente) {
+            return response()->json(['message' => 'Cliente no encontrado'], 404);
+        }
+
+        $validated = $request->validate([
+            'nombre' => 'sometimes|required|string|max:255',
+            'nit' => 'sometimes|required|integer|unique:empresas,nit,' . $cliente->id,
+            'logo' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
+
+        if (isset($validated['logo'])) {
+            $cliente->logo = $validated['logo']->store('logos', 'public');
+        }
+
+        $cliente->fill($validated);
+        $cliente->save();
+
+        return response()->json([
+            'data' => $cliente,
+        ]);
     }
 
     /**
@@ -131,6 +155,14 @@ class ClienteController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $cliente = Cliente::find($id);
+
+        if (!$cliente) {
+            return response()->json(['message' => 'Cliente no encontrado'], 404);
+        }
+
+        $cliente->delete();
+
+        return response()->json(['message' => 'Cliente eliminado con éxito']);
     }
 }

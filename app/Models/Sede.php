@@ -42,4 +42,9 @@ class Sede extends Model
     {
         return $this->belongsTo(Municipio::class);
     }
+
+    public function equipos()
+    {
+        return $this->hasMany(Equipo::class);
+    }
 }

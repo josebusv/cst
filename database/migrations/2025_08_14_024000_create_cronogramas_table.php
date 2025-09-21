@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('month', 2);
             $table->bigInteger('clasificacion_biomedica_id')->unsigned();
             $table->bigInteger('reporte_id')->unsigned()->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

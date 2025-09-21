@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('nombre');
             $table->string('logo')->nullable();
             $table->enum('tipo',['cliente', 'principal', 'proveedor']);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

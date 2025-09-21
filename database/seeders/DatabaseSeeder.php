@@ -15,7 +15,10 @@ class DatabaseSeeder extends Seeder
         $this->call([
             DepartamentoSeeder::class,
             MunicipioSeeder::class,
-            EmpresaSeeder::class,            
+            EmpresaSeeder::class,
+            AccesorioSeeder::class,
+            SedeSeeder::class,
+            PermissionsDemoSeeder::class,
         ]);
     }
 }

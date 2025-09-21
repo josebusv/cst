@@ -4,9 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\SedeController;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\RoleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,20 +24,28 @@ use App\Http\Controllers\ClienteController;
 // });
 
 Route::group([
- 
-    // 'middleware' => 'auth:api',
     'prefix' => 'auth'
 ], function ($router) {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
-    Route::middleware(['auth:api'])->group(function () {
+
+    // Solo requiere estar autenticado, no un rol específico
+    Route::middleware('auth:api')->post('/refresh', [AuthController::class, 'refresh'])->name('refresh');
+
+    Route::middleware(['auth:api', 'role:Super-Admin'])->group(function () {
         Route::post('/register', [AuthController::class, 'register'])->name('register');
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-        Route::post('/refresh', [AuthController::class, 'refresh'])->name('refresh');
         Route::post('/me', [AuthController::class, 'me'])->name('me');
         Route::apiResource('users', UserController::class);
-        Route::apiResource('empresas', EmpresaController::class);
         Route::apiResource('sedes', SedeController::class);
         Route::apiResource('clientes', ClienteController::class);
+        Route::apiResource('roles', RoleController::class);
+        Route::get('lista/departamentos', [App\Http\Controllers\ListaController::class, 'listarDepartamentos']);
+        Route::get('lista/municipios/{departamento}', [App\Http\Controllers\ListaController::class, 'listarMunicipios']);
+        Route::get('lista/clientes', [App\Http\Controllers\ListaController::class, 'listarClientes']);
+        Route::get('lista/sedes/{cliente}', [App\Http\Controllers\ListaController::class, 'listarSedes']);
+        Route::get('lista/accesorios', [App\Http\Controllers\ListaController::class, 'listarAccesorios']);
+        Route::get('lista/tipos-equipos', [App\Http\Controllers\ListaController::class, 'listarTiposEquipos']);
+        Route::get('lista/roles', [App\Http\Controllers\ListaController::class, 'listarRoles']);
+        Route::get('lista/permisos', [App\Http\Controllers\ListaController::class, 'listarPermisos']);
     });
-    
 });

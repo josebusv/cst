@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('descripcion')->nullable();
             $table->string('ruta');
             $table->string('tipo_documento')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

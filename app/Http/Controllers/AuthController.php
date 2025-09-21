@@ -68,7 +68,18 @@ class AuthController extends Controller
      */
     public function me()
     {
-        return response()->json(auth('api')->user());
+
+        $me = auth('api')->user();
+        $role = $me->roles = $me->getRoleNames();
+        $sede = $me->sede;
+        $empresa = $sede->empresa ?? null;
+
+        return response()->json([
+            'user' => $me,
+            'role' => $role,
+            'sede' => $sede,
+            'empresa' => $empresa,
+        ]);
     }
  
     /**
@@ -102,11 +113,15 @@ class AuthController extends Controller
      */
     protected function respondWithToken($token)
     {
+        $user = auth('api')->user();
+        $roles = $user->getRoleNames(); // Obtiene los roles del usuario
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth('api')->factory()->getTTL() * 60,
-            'user' => auth('api')->user(),
+            'user' => $user,
+            'roles' => $roles, // Agrega los roles aquí
         ]);
     }
 

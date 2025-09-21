@@ -16,15 +16,16 @@ return new class extends Migration
         Schema::create('equipos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('sede_id')->constrained('sedes')->onDelete('cascade');
-            $table->string('eqipo');
+            $table->string('equipo');
             $table->string('marca');
             $table->string('modelo');
-            $table->string('serie')->unique();
+            $table->string('serie');
             $table->string('fabricante')->nullable();
             $table->string('registro_invima')->nullable();
             $table->string('pais_origen')->nullable();
             $table->string('codigo')->nullable();
             $table->string('ubicacion')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

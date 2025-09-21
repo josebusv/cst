@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('ruta');
             $table->string('descripcion')->nullable();
             $table->string('tipo_Equipo')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

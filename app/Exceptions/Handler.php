@@ -8,6 +8,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Illuminate\Auth\AuthenticationException;
 
 class Handler extends ExceptionHandler
 {
@@ -26,6 +27,13 @@ class Handler extends ExceptionHandler
     {
         // Forzar JSON si la ruta comienza con /api o si el cliente espera JSON
         if ($request->is('api/*') || $request->expectsJson()) {
+            if ($exception instanceof AuthenticationException) {
+                return response()->json([
+                    'message' => 'No autenticado.',
+                    'error' => $exception->getMessage(),
+                ], 401);
+            }
+
             if ($exception instanceof ValidationException) {
                 return response()->json([
                     'message' => 'Datos inválidos',
@@ -36,19 +44,29 @@ class Handler extends ExceptionHandler
             if ($exception instanceof ModelNotFoundException) {
                 return response()->json([
                     'message' => 'Recurso no encontrado',
+                    'error' => $exception->getMessage(),
                 ], 404);
             }
 
             if ($exception instanceof NotFoundHttpException) {
                 return response()->json([
                     'message' => 'Ruta no encontrada',
+                    'error' => $exception->getMessage(),
                 ], 404);
             }
 
             if ($exception instanceof MethodNotAllowedHttpException) {
                 return response()->json([
                     'message' => 'Método HTTP no permitido',
+                    'error' => $exception->getMessage(),
                 ], 405);
+            }
+
+            if ($exception instanceof \Spatie\Permission\Exceptions\UnauthorizedException) {
+                return response()->json([
+                    'message' => 'No tienes los permisos necesarios para acceder a este recurso.',
+                    'error' => $exception->getMessage(),
+                ], 403);
             }
 
             return response()->json([

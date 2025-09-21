@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
             $table->boolean('activo')->default(true);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

@@ -63,11 +63,12 @@ class SedeController extends Controller
             'email' => 'nullable|email|max:255',
             'departamento_id' => 'nullable|exists:departamentos,id',
             'municipio_id' => 'nullable|exists:municipios,id',
+            'empresa_id' => 'required|exists:empresas,id',
         ]);
 
-        $empresa = auth()->user()->empresa->id;
+        //$empresa = auth()->user()->empresa->id;
 
-        Sede::create(array_merge($validated, ['empresa_id' => $empresa]));
+        Sede::create($validated);
 
         return response()->json(['message' => 'Sede creada con éxito.'], 201);
     }
@@ -93,9 +94,12 @@ class SedeController extends Controller
             'nombre' => $sede->nombre,
             'direccion' => $sede->direccion,
             'telefono' => $sede->telefono,
+            'email' => $sede->email,
             'principal' => $sede->principal,
             'empresa' => $sede->empresa ? $sede->empresa->nombre : null,
+            'departamento_id' => $sede->departamento_id,
             'departamento' => $sede->departamento ? $sede->departamento->nombre : null,
+            'municipio_id' => $sede->municipio_id,
             'municipio' => $sede->municipio ? $sede->municipio->nombre : null,
         ]);
     }

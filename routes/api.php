@@ -37,6 +37,7 @@ Route::group([
         Route::post('/me', [AuthController::class, 'me'])->name('me');
         Route::apiResource('users', UserController::class);
         Route::apiResource('sedes', SedeController::class);
+        Route::get('users/empresa/{empresaId}', [UserController::class, 'usuariosPorEmpresa']);
         Route::apiResource('clientes', ClienteController::class);
         Route::apiResource('roles', RoleController::class);
         Route::get('lista/departamentos', [App\Http\Controllers\ListaController::class, 'listarDepartamentos']);

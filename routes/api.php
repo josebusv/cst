@@ -7,6 +7,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\SedeController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\EquipoController;
+use App\Http\Controllers\ReporteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,6 +42,10 @@ Route::group([
         Route::get('users/empresa/{empresaId}', [UserController::class, 'usuariosPorEmpresa']);
         Route::apiResource('clientes', ClienteController::class);
         Route::apiResource('roles', RoleController::class);
+        Route::apiResource('equipos', EquipoController::class);
+        Route::get('equipos/empresa/{empresaId}', [EquipoController::class, 'equiposPorEmpresa']);
+        Route::apiResource('reportes', ReporteController::class);
+        Route::get('reportes/equipo/{equipoId}', [ReporteController::class, 'reportesPorEquipo']);
         Route::get('lista/departamentos', [App\Http\Controllers\ListaController::class, 'listarDepartamentos']);
         Route::get('lista/municipios/{departamento}', [App\Http\Controllers\ListaController::class, 'listarMunicipios']);
         Route::get('lista/clientes', [App\Http\Controllers\ListaController::class, 'listarClientes']);

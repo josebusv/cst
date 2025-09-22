@@ -19,6 +19,8 @@ class Equipo extends Model
         'registro_invima',
         'pais_origen',
         'ubicacion',
+        'inventario',
+        'code_ecri'
     ];
 
     protected $table = 'equipos';

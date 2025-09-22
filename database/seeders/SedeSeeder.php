@@ -20,7 +20,7 @@ class SedeSeeder extends Seeder
         $sedes = Sede::all();
 
         foreach ($sedes as $sede) {
-            $equipos = Equipo::factory()->count(5)->create([
+            $equipos = Equipo::factory()->count(15)->create([
                     'sede_id' => $sede->id,
                 ]);
                 foreach ($equipos as $equipo) {

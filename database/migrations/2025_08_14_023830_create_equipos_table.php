@@ -20,11 +20,14 @@ return new class extends Migration
             $table->string('marca');
             $table->string('modelo');
             $table->string('serie');
+            $table->string('servicio');
             $table->string('fabricante')->nullable();
             $table->string('registro_invima')->nullable();
             $table->string('pais_origen')->nullable();
             $table->string('codigo')->nullable();
             $table->string('ubicacion')->nullable();
+            $table->string('inventario')->nullable();
+            $table->string('code_ecri')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

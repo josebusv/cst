@@ -13,7 +13,7 @@ class EquipoSeeder extends Seeder
     public function run(): void
     {
         \App\Models\Equipo::factory()
-            ->count(50)
+            ->count(500)
             ->create();
     }
 }

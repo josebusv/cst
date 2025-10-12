@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Validator;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthController extends Controller
 {
@@ -15,7 +17,8 @@ class AuthController extends Controller
      * @return void
      */
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->middleware('auth:api', ['except' => ['login']]);
     }
 
@@ -24,27 +27,27 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function register() {
-        $validator = Validator::make(request()->all(), [
-            'name' => 'required',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|confirmed|min:8',
-        ]);
- 
-        if($validator->fails()){
-            return response()->json($validator->errors()->toJson(), 400);
-        }
- 
-        $user = new User;
-        $user->name = request()->name;
-        $user->email = request()->email;
-        $user->password = bcrypt(request()->password);
-        $user->save();
- 
-        return response()->json($user, 201);
-    }
- 
- 
+    // public function register() {
+    //     $validator = Validator::make(request()->all(), [
+    //         'name' => 'required',
+    //         'email' => 'required|email|unique:users',
+    //         'password' => 'required|confirmed|min:8',
+    //     ]);
+
+    //     if($validator->fails()){
+    //         return response()->json($validator->errors()->toJson(), 400);
+    //     }
+
+    //     $user = new User;
+    //     $user->name = request()->name;
+    //     $user->email = request()->email;
+    //     $user->password = bcrypt(request()->password);
+    //     $user->save();
+
+    //     return response()->json($user, 201);
+    // }
+
+
     /**
      * Get a JWT via given credentials.
      *
@@ -53,14 +56,14 @@ class AuthController extends Controller
     public function login()
     {
         $credentials = request(['email', 'password']);
- 
+
         if (! $token = auth('api')->attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
- 
+
         return $this->respondWithToken($token);
     }
- 
+
     /**
      * Get the authenticated User.
      *
@@ -68,20 +71,10 @@ class AuthController extends Controller
      */
     public function me()
     {
-
-        $me = auth('api')->user();
-        $role = $me->roles = $me->getRoleNames();
-        $sede = $me->sede;
-        $empresa = $sede->empresa ?? null;
-
-        return response()->json([
-            'user' => $me,
-            'role' => $role,
-            'sede' => $sede,
-            'empresa' => $empresa,
-        ]);
+        $user = auth('api')->user()->load('sede.empresa');
+        return new UserResource($user);
     }
- 
+
     /**
      * Log the user out (Invalidate the token).
      *
@@ -90,10 +83,10 @@ class AuthController extends Controller
     public function logout()
     {
         auth()->logout();
- 
+
         return response()->json(['message' => 'Successfully logged out']);
     }
- 
+
     /**
      * Refresh a token.
      *
@@ -101,9 +94,13 @@ class AuthController extends Controller
      */
     public function refresh()
     {
-        return $this->respondWithToken(auth()->refresh());
+        try {
+            return $this->respondWithToken(auth('api')->refresh());
+        } catch (JWTException $e) {
+            return response()->json(['error' => 'No se pudo refrescar el token'], 401);
+        }
     }
- 
+
     /**
      * Get the token array structure.
      *
@@ -113,16 +110,11 @@ class AuthController extends Controller
      */
     protected function respondWithToken($token)
     {
-        $user = auth('api')->user();
-        $roles = $user->getRoleNames(); // Obtiene los roles del usuario
-
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth('api')->factory()->getTTL() * 60,
-            'user' => $user,
-            'roles' => $roles, // Agrega los roles aquí
+            'user' => new UserResource(auth('api')->user()->load('sede.empresa'))
         ]);
     }
-
 }

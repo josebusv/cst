@@ -28,7 +28,7 @@ use App\Http\Controllers\ReporteController;
 Route::group([
     'prefix' => 'auth'
 ], function ($router) {
-    Route::post('/login', [AuthController::class, 'login'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login')->middleware('throttle:10,1');
 
     // Solo requiere estar autenticado, no un rol específico
     Route::middleware('auth:api')->post('/refresh', [AuthController::class, 'refresh'])->name('refresh');

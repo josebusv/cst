@@ -60,10 +60,14 @@ class PermissionsDemoSeeder extends Seeder
 
         // permisos de listas
         Permission::create(['guard_name' => 'api', 'name' => 'Listar Departamentos']);
-        Permission::create(['guard_name' => 'api', 'name' => 'Listar Municipios']);;
+        Permission::create(['guard_name' => 'api', 'name' => 'Listar Municipios']);
         Permission::create(['guard_name' => 'api', 'name' => 'Listar Accesorios']);
         Permission::create(['guard_name' => 'api', 'name' => 'Listar Tipos Equipos']);
-        
+        Permission::create(['guard_name' => 'api', 'name' => 'Listar Clientes']);
+        Permission::create(['guard_name' => 'api', 'name' => 'Listar Sedes']);
+        Permission::create(['guard_name' => 'api', 'name' => 'Listar Roles']);
+        Permission::create(['guard_name' => 'api', 'name' => 'Listar Permisos']);
+
 
         // roles
         $role3 = Role::create(['guard_name' => 'api', 'name' => 'Super-Admin']);

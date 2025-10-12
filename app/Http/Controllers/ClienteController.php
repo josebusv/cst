@@ -3,72 +3,45 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Requests\UpdateClienteRequest;
+use App\Http\Requests\StoreClienteRequest;
 use App\Models\Cliente;
+use App\Http\Resources\ClienteResource;
+use App\Http\Resources\SedeResource;
 use Illuminate\Support\Facades\DB;
 
 class ClienteController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:Listar Clientes')->only('index');
+        $this->middleware('can:Ver Clientes')->only('show');
+        $this->middleware('can:Eliminar Clientes')->only('destroy');
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $clientes = Cliente::with('sedes')->select('id', 'nombre', 'logo')
-            ->paginate(15);
-
-        $clientes->getCollection()->transform(function ($cliente) {
-            return [
-                    'id' => $cliente->id,
-                    'nombre' => $cliente->nombre,
-                    'logo' => $cliente->logo,
-                    'sedes' => $cliente->sedes->map(function ($sede) {
-                        return [
-                                'id' => $sede->id,
-                                'nombre' => $sede->nombre,
-                                'direccion'=> $sede->direccion,
-                                'telefono'=> $sede->telefono,
-                                'email'=> $sede->email,
-                                'tipo_sede' => $sede->principal ? 'Principal' : 'Secundaria',
-                        ];
-                    }),
-                ];
-            });
-        
-        return response()->json([
-            'data' => $clientes->items(),
-            'meta' => [
-                'current_page' => $clientes->currentPage(),
-                'last_page' => $clientes->lastPage(),
-                'per_page' => $clientes->perPage(),
-                'total' => $clientes->total(),
-                'next_page_url' => $clientes->nextPageUrl(),
-                'prev_page_url' => $clientes->previousPageUrl(),
-            ],
-        ]);
+        $clientes = Cliente::with('sedes')->paginate(15);
+        return ClienteResource::collection($clientes);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreClienteRequest $request)
     {
-        $validated = $request->validate([
-            'nombre' => 'required|string|max:255',
-            'nit' => 'required|integer|unique:empresas,nit',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'nombresede' => 'required|string|max:255',
-            'direccion' => 'required|string|max:255',
-            'telefono' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255',
-            'departamento_id'   =>  'required|integer|exists:departamentos,id',
-            'municipio_id'      =>  'required|integer|exists:municipios,id',
-        ]);
+        $validated = $request->validated();
         DB::beginTransaction();
         try {
             $cliente = new Cliente();
             $cliente->nombre = $validated['nombre'];
             $cliente->nit = $validated['nit'];
-            $cliente->logo = $validated['logo']->store('logos', 'public');
+            if (isset($validated['logo'])) {
+                $cliente->logo = $validated['logo']->store('logos', 'public');
+            }
             $cliente->save();
 
         $cliente->sedes()->create([
@@ -89,54 +62,29 @@ class ClienteController extends Controller
             ], 500);
         }
 
+        $cliente->load('sedes');
+
         return response()->json([
-            'data' => $cliente,
+            'message' => 'Cliente creado exitosamente',
+            'data' => new ClienteResource($cliente),
         ], 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Cliente $cliente)
     {
-        $cliente = Cliente::with(['sedes.departamento', 'sedes.municipio'])->findOrFail($id);
-
-        return response()->json([
-            'data' => [
-                'id' => $cliente->id,
-                'nombre' => $cliente->nombre,
-                'logo' => $cliente->logo ? asset('storage/' . $cliente->logo) : null,
-                'sedes' => $cliente->sedes->map(function ($sede) {
-                    return [
-                        'id' => $sede->id,
-                        'nombre' => $sede->nombre,
-                        'direccion' => $sede->direccion,
-                        'telefono' => $sede->telefono,
-                        'email' => $sede->email,
-                        'departamento' => $sede->departamento ? $sede->departamento->nombre : null,
-                        'municipio' => $sede->municipio ? $sede->municipio->nombre : null,
-                    ];
-                }),
-            ]
-        ]);
+        $cliente->load(['sedes.departamento', 'sedes.municipio']);
+        return new ClienteResource($cliente);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateClienteRequest $request, Cliente $cliente)
     {
-        $cliente = Cliente::find($id);
-
-        if (!$cliente) {
-            return response()->json(['message' => 'Cliente no encontrado'], 404);
-        }
-
-        $validated = $request->validate([
-            'nombre' => 'sometimes|required|string|max:255',
-            'nit' => 'sometimes|required|integer|unique:empresas,nit,' . $cliente->id,
-            'logo' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-        ]);
+        $validated = $request->validated();
 
         if (isset($validated['logo'])) {
             $cliente->logo = $validated['logo']->store('logos', 'public');
@@ -145,22 +93,19 @@ class ClienteController extends Controller
         $cliente->fill($validated);
         $cliente->save();
 
+        $cliente->load('sedes');
+
         return response()->json([
-            'data' => $cliente,
+            'message' => 'Cliente actualizado exitosamente',
+            'data' => new ClienteResource($cliente),
         ]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Cliente $cliente)
     {
-        $cliente = Cliente::find($id);
-
-        if (!$cliente) {
-            return response()->json(['message' => 'Cliente no encontrado'], 404);
-        }
-
         $cliente->delete();
 
         return response()->json(['message' => 'Cliente eliminado con éxito']);

@@ -11,18 +11,65 @@ use App\Models\Accesorio;
 use App\Models\TipoEquipo;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use App\Http\Resources\DepartamentoListResource;
+use App\Http\Resources\MunicipioListResource;
+use App\Http\Resources\ClienteListResource;
+use App\Http\Resources\SedeListResource;
+use App\Http\Resources\AccesorioListResource;
+use App\Http\Resources\TipoEquipoListResource;
+use App\Http\Resources\RoleListResource;
+use App\Http\Resources\PermissionResource;
 
 
 class ListaController extends Controller
+
+
 {
-    
+
+
+    public function __construct()
+
+
+    {
+
+
+        $this->middleware('can:Listar Departamentos')->only('listarDepartamentos');
+
+
+        $this->middleware('can:Listar Municipios')->only('listarMunicipios');
+
+
+        $this->middleware('can:Listar Clientes')->only('listarClientes');
+
+
+        $this->middleware('can:Listar Sedes')->only('listarSedes');
+
+
+        $this->middleware('can:Listar Accesorios')->only('listarAccesorios');
+
+
+        $this->middleware('can:Listar Tipos Equipos')->only('listarTiposEquipos');
+
+
+        $this->middleware('can:Listar Roles')->only('listarRoles');
+
+
+        $this->middleware('can:Listar Permisos')->only('listarPermisos');
+
+
+    }
+
+
+
+
+
     /**
      * Lista Departamentos
      */
     public function listarDepartamentos()
     {
-        $departamentos = Departamento::select('id', 'nombre')->get();
-        return response()->json($departamentos);
+        $departamentos = Departamento::all();
+        return DepartamentoListResource::collection($departamentos);
     }
 
     /**
@@ -30,8 +77,8 @@ class ListaController extends Controller
      */
     public function listarMunicipios(Departamento $departamento)
     {
-        $municipios = $departamento->municipios()->select('id', 'nombre')->get();
-        return response()->json($municipios);
+        $municipios = $departamento->municipios;
+        return MunicipioListResource::collection($municipios);
     }
 
     /**
@@ -39,8 +86,8 @@ class ListaController extends Controller
      */
     public function listarClientes()
     {
-        $clientes = Cliente::select('id', 'nombre')->get();
-        return response()->json($clientes);
+        $clientes = Cliente::all();
+        return ClienteListResource::collection($clientes);
     }
 
     /**
@@ -48,8 +95,8 @@ class ListaController extends Controller
      */
     public function listarSedes(Cliente $cliente)
     {
-        $sedes = $cliente->sedes()->select('id', 'nombre')->get();
-        return response()->json($sedes);
+        $sedes = $cliente->sedes;
+        return SedeListResource::collection($sedes);
     }
 
     /**
@@ -57,8 +104,8 @@ class ListaController extends Controller
      */
     public function listarAccesorios()
     {
-        $accesorios = Accesorio::select('id', 'nombre')->get();
-        return response()->json($accesorios);
+        $accesorios = Accesorio::all();
+        return AccesorioListResource::collection($accesorios);
     }
 
     /**
@@ -66,8 +113,8 @@ class ListaController extends Controller
      */
     public function listarTiposEquipos()
     {
-        $tiposEquipos = \App\Models\TipoEquipo::select('id', 'tipo')->get();
-        return response()->json($tiposEquipos);
+        $tiposEquipos = TipoEquipo::all();
+        return TipoEquipoListResource::collection($tiposEquipos);
     }
 
     /**
@@ -75,8 +122,8 @@ class ListaController extends Controller
      */
     public function listarRoles()
     {
-        $roles = Role::select('id', 'name')->get();
-        return response()->json($roles);
+        $roles = Role::all();
+        return RoleListResource::collection($roles);
     }
 
     /**
@@ -84,7 +131,7 @@ class ListaController extends Controller
      */
     public function listarPermisos()
     {
-        $permisos = Permission::select('id', 'name')->orderBy('id')->get();
-        return response()->json($permisos);
+        $permisos = Permission::orderBy('id')->get();
+        return PermissionResource::collection($permisos);
     }
 }

@@ -3,39 +3,36 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Requests\UpdateRoleRequest;
+use App\Http\Requests\StoreRoleRequest;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use App\Http\Resources\RoleResource;
+use App\Http\Resources\PermissionResource;
 
 class RoleController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:Listar Roles')->only(['index', 'show']);
+        $this->middleware('can:Eliminar Roles')->only('destroy');
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $roles = Role::with('permissions:id,name')->get();
-
-        $rolesWithPermissions = $roles->map(function ($role) {
-            return [
-                'id' => $role->id,
-                'name' => $role->name,
-                'permissions' => $role->permissions
-            ];
-        });
-
-        return response()->json($roles);
+        $roles = Role::with('permissions')->get();
+        return RoleResource::collection($roles);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreRoleRequest $request)
     {
-        $requestedData = $request->validate([
-            'name' => 'required|string|unique:roles,name',
-            'permissions' => 'array',
-            'permissions.*' => 'integer|exists:permissions,id',
-        ]);
+        $requestedData = $request->validated();
 
         $role = Role::create([
             'name' => $requestedData['name']
@@ -45,39 +42,30 @@ class RoleController extends Controller
             $role->syncPermissions($requestedData['permissions']);
         }
 
-        return response()->json($role, 201);
+        $role->load('permissions');
+
+        return response()->json([
+            'message' => 'Rol creado exitosamente',
+            'data' => new RoleResource($role),
+        ], 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Role $role)
     {
-        $roles = Role::with('permissions:id,name')->findOrFail($id);
-
-        $rolesWithPermissions = $roles->map(function ($role) {
-            return [
-                'id' => $role->id,
-                'name' => $role->name,
-                'permissions' => $role->permissions
-            ];
-        });
-
-        return response()->json($roles);
+        $role->load('permissions');
+        return new RoleResource($role);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateRoleRequest $request, Role $role)
     {
-        $requestedData = $request->validate([
-            'name' => 'required|string|unique:roles,name,' . $id,
-            'permissions' => 'array',
-            'permissions.*' => 'integer|exists:permissions,id',
-        ]);
+        $requestedData = $request->validated();
 
-        $role = Role::findOrFail($id);
         $role->name = $requestedData['name'];
         $role->save();
 
@@ -85,17 +73,21 @@ class RoleController extends Controller
             $role->syncPermissions($requestedData['permissions']);
         }
 
-        return response()->json($role);
+        $role->load('permissions');
+
+        return response()->json([
+            'message' => 'Rol actualizado exitosamente',
+            'data' => new RoleResource($role),
+        ]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Role $role)
     {
-        $role = Role::findOrFail($id);
         $role->delete();
 
-        return response()->json(null, 204);
+        return response()->json(['message' => 'Rol eliminado exitosamente'], 200);
     }
 }

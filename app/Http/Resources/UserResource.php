@@ -27,6 +27,7 @@ class UserResource extends JsonResource
                         return [
                             'id' => optional($this->sede->empresa)->id,
                             'nombre' => optional($this->sede->empresa)->nombre,
+                            'tipo' => optional($this->sede->empresa)->tipo,
                         ];
                     }),
                 ];

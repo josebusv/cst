@@ -110,11 +110,15 @@ class AuthController extends Controller
      */
     protected function respondWithToken($token)
     {
+        $user = auth('api')->user()->load('sede.empresa');
+        $empresaTipo = optional(optional($user->sede)->empresa)->tipo;
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth('api')->factory()->getTTL() * 60,
-            'user' => new UserResource(auth('api')->user()->load('sede.empresa'))
+            'user' => new UserResource($user),
+            'empresa_tipo' => $empresaTipo,
         ]);
     }
 }

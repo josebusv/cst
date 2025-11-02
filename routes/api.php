@@ -9,6 +9,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\EquipoController;
 use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\PasswordResetController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,6 +30,19 @@ Route::group([
     'prefix' => 'auth'
 ], function ($router) {
     Route::post('/login', [AuthController::class, 'login'])->name('login')->middleware('throttle:10,1');
+
+    // Rutas públicas para recuperación de contraseña
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLinkEmail'])
+        ->name('password.email')
+        ->middleware('throttle:5,1'); // Máximo 5 intentos por minuto
+
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])
+        ->name('password.reset')
+        ->middleware('throttle:5,1');
+
+    Route::post('/validate-token', [PasswordResetController::class, 'validateToken'])
+        ->name('password.validate')
+        ->middleware('throttle:10,1');
 
     // Rutas que solo requieren autenticación
     Route::middleware('auth:api')->group(function () {

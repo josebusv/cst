@@ -6,14 +6,16 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Auth\Passwords\CanResetPassword;
 // use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Spatie\Permission\Traits\HasRoles;
 use \Illuminate\Database\Eloquent\SoftDeletes;
+use App\Notifications\CustomResetPassword;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasFactory, Notifiable, HasRoles, softDeletes;
+    use HasFactory, Notifiable, HasRoles, softDeletes, CanResetPassword;
 
     /**
      * The attributes that are mass assignable.
@@ -49,21 +51,22 @@ class User extends Authenticatable implements JWTSubject
     ];
     /**
      * Get the identifier that will be stored in the JWT claim.
-     * 
+     *
      * @return mixed
      */
     public function getJWTIdentifier()
     {
-        return $this->getKey(); 
+        return $this->getKey();
     }
 
     /**
      * Return a key value array, containing any custom claims to be added to the JWT.
-     * 
+     *
      * @return array
      */
 
-    public function getJWTCustomClaims(){
+    public function getJWTCustomClaims()
+    {
         return [];
     }
 
@@ -75,12 +78,23 @@ class User extends Authenticatable implements JWTSubject
     public function empresa()
     {
         return $this->hasOneThrough(
-        Empresa::class,    // Modelo destino
-        Sede::class,       // Modelo intermedio
-        'empresa_id',      // Foreign key en sedes que referencia a empresas.id
-        'id',              // Foreign key en empresas que referencia a sedes.empresa_id
-        'sede_id',         // Local key en users
-        'id'              // Local key en sedes
-    );
+            Empresa::class,    // Modelo destino
+            Sede::class,       // Modelo intermedio
+            'empresa_id',      // Foreign key en sedes que referencia a empresas.id
+            'id',              // Foreign key en empresas que referencia a sedes.empresa_id
+            'sede_id',         // Local key en users
+            'id'              // Local key en sedes
+        );
+    }
+
+    /**
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new CustomResetPassword($token));
     }
 }

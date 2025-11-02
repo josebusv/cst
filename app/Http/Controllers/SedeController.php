@@ -14,6 +14,8 @@ class SedeController extends Controller
     public function __construct()
     {
         $this->middleware('can:Listar Sedes')->only(['index', 'show']);
+        $this->middleware('can:Crear Sedes')->only('store');
+        $this->middleware('can:Editar Sedes')->only('update');
         $this->middleware('can:Eliminar Sedes')->only('destroy');
     }
 

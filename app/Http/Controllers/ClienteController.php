@@ -16,6 +16,8 @@ class ClienteController extends Controller
     {
         $this->middleware('can:Listar Clientes')->only('index');
         $this->middleware('can:Ver Clientes')->only('show');
+        $this->middleware('can:Crear Clientes')->only('store');
+        $this->middleware('can:Editar Clientes')->only('update');
         $this->middleware('can:Eliminar Clientes')->only('destroy');
     }
 
@@ -44,16 +46,16 @@ class ClienteController extends Controller
             }
             $cliente->save();
 
-        $cliente->sedes()->create([
-            'nombre' => $validated['nombresede'],
-            'direccion' => $validated['direccion'],
-            'telefono' => $validated['telefono'],
-            'email' => $validated['email'],
-            'departamento_id' => $validated['departamento_id'],
-            'municipio_id' => $validated['municipio_id'],
-        ]);
+            $cliente->sedes()->create([
+                'nombre' => $validated['nombresede'],
+                'direccion' => $validated['direccion'],
+                'telefono' => $validated['telefono'],
+                'email' => $validated['email'],
+                'departamento_id' => $validated['departamento_id'],
+                'municipio_id' => $validated['municipio_id'],
+            ]);
 
-        DB::commit();
+            DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([

@@ -13,6 +13,8 @@ class EquipoController extends Controller
     public function __construct()
     {
         $this->middleware('can:Listar Equipos')->only(['index', 'show', 'equiposPorEmpresa']);
+        $this->middleware('can:Crear Equipos')->only('store');
+        $this->middleware('can:Editar Equipos')->only('update');
         $this->middleware('can:Eliminar Equipos')->only('destroy');
     }
 

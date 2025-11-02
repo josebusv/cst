@@ -20,48 +20,19 @@ use App\Http\Resources\TipoEquipoListResource;
 use App\Http\Resources\RoleListResource;
 use App\Http\Resources\PermissionResource;
 
-
 class ListaController extends Controller
-
-
 {
-
-
     public function __construct()
-
-
     {
-
-
         $this->middleware('can:Listar Departamentos')->only('listarDepartamentos');
-
-
         $this->middleware('can:Listar Municipios')->only('listarMunicipios');
-
-
         $this->middleware('can:Listar Clientes')->only('listarClientes');
-
-
         $this->middleware('can:Listar Sedes')->only('listarSedes');
-
-
         $this->middleware('can:Listar Accesorios')->only('listarAccesorios');
-
-
         $this->middleware('can:Listar Tipos Equipos')->only('listarTiposEquipos');
-
-
         $this->middleware('can:Listar Roles')->only('listarRoles');
-
-
         $this->middleware('can:Listar Permisos')->only('listarPermisos');
-
-
     }
-
-
-
-
 
     /**
      * Lista Departamentos
@@ -82,7 +53,7 @@ class ListaController extends Controller
     }
 
     /**
-     * Listar Clientes
+     * Lista Clientes
      */
     public function listarClientes()
     {
@@ -91,7 +62,7 @@ class ListaController extends Controller
     }
 
     /**
-     * Listar sedes
+     * Lista Sedes
      */
     public function listarSedes(Cliente $cliente)
     {
@@ -100,7 +71,7 @@ class ListaController extends Controller
     }
 
     /**
-     * Listar Accesorios
+     * Lista Accesorios
      */
     public function listarAccesorios()
     {
@@ -109,7 +80,7 @@ class ListaController extends Controller
     }
 
     /**
-     * lista de tipos de equipos
+     * Lista Tipos de Equipos
      */
     public function listarTiposEquipos()
     {
@@ -118,7 +89,7 @@ class ListaController extends Controller
     }
 
     /**
-     * Listar Roles
+     * Lista Roles
      */
     public function listarRoles()
     {
@@ -127,7 +98,7 @@ class ListaController extends Controller
     }
 
     /**
-     * Listar Permisos
+     * Lista Permisos
      */
     public function listarPermisos()
     {

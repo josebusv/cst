@@ -17,6 +17,8 @@ class UserController extends Controller
     public function __construct()
     {
         $this->middleware('can:Listar Usuarios')->only(['index', 'show', 'usuariosPorEmpresa']);
+        $this->middleware('can:Crear Usuarios')->only('store');
+        $this->middleware('can:Editar Usuarios')->only('update');
         $this->middleware('can:Eliminar Usuarios')->only('destroy');
     }
 
@@ -112,4 +114,3 @@ class UserController extends Controller
         return UserResource::collection($usuarios);
     }
 }
-

@@ -63,26 +63,84 @@ class PermissionsDemoSeeder extends Seeder
         Permission::create(['guard_name' => 'api', 'name' => 'Listar Municipios']);
         Permission::create(['guard_name' => 'api', 'name' => 'Listar Accesorios']);
         Permission::create(['guard_name' => 'api', 'name' => 'Listar Tipos Equipos']);
-        Permission::create(['guard_name' => 'api', 'name' => 'Listar Clientes']);
-        Permission::create(['guard_name' => 'api', 'name' => 'Listar Sedes']);
-        Permission::create(['guard_name' => 'api', 'name' => 'Listar Roles']);
-        Permission::create(['guard_name' => 'api', 'name' => 'Listar Permisos']);
 
+        // crear roles específicos
+        $superAdminRole = Role::create(['guard_name' => 'api', 'name' => 'Super-Admin']);
+        $adminRole = Role::create(['guard_name' => 'api', 'name' => 'Administrador']);
+        $operadorRole = Role::create(['guard_name' => 'api', 'name' => 'Operador']);
+        $clienteRole = Role::create(['guard_name' => 'api', 'name' => 'Cliente']);
 
-        // roles
-        $role3 = Role::create(['guard_name' => 'api', 'name' => 'Super-Admin']);
-        // gets all permissions via Gate::before rule; see AuthServiceProvider
-
+        // Asignar usuario al rol Super-Admin
         $user = \App\Models\User::find(1);
-        $user->assignRole($role3);
-
-        // Obtener el rol Super-Admin
-        $role = Role::findByName('Super-Admin', 'api');
+        if ($user) {
+            $user->assignRole($superAdminRole);
+        }
 
         // Obtener todos los permisos
-        $permissions = Permission::all();
+        $allPermissions = Permission::all();
 
-        // Asignar todos los permisos al rol
-        $role->syncPermissions($permissions);
+        // Super-Admin tiene todos los permisos
+        $superAdminRole->syncPermissions($allPermissions);
+
+        // Administrador: puede gestionar usuarios, clientes, sedes, equipos
+        $adminRole->syncPermissions([
+            'Crear Usuarios',
+            'Editar Usuarios',
+            'Listar Usuarios',
+            'Eliminar Usuarios',
+            'Crear Clientes',
+            'Editar Clientes',
+            'Listar Clientes',
+            'Eliminar Clientes',
+            'Ver Clientes',
+            'Crear Sedes',
+            'Editar Sedes',
+            'Listar Sedes',
+            'Eliminar Sedes',
+            'Crear Equipos',
+            'Editar Equipos',
+            'Listar Equipos',
+            'Eliminar Equipos',
+            'Listar Reportes',
+            'Ver Hoja De Vida',
+            'Imprimir Hoja De Vida',
+            'Listar Departamentos',
+            'Listar Municipios',
+            'Listar Accesorios',
+            'Listar Tipos Equipos'
+        ]);
+
+        // Operador: puede gestionar equipos y reportes
+        $operadorRole->syncPermissions([
+            'Listar Usuarios',
+            'Listar Clientes',
+            'Ver Clientes',
+            'Listar Sedes',
+            'Crear Equipos',
+            'Editar Equipos',
+            'Listar Equipos',
+            'Crear Reportes',
+            'Firmar Reportes',
+            'Listar Reportes',
+            'Imprimir Reportes',
+            'Crear Hoja De Vida',
+            'Ver Hoja De Vida',
+            'Imprimir Hoja De Vida',
+            'Listar Departamentos',
+            'Listar Municipios',
+            'Listar Accesorios',
+            'Listar Tipos Equipos'
+        ]);
+
+        // Cliente: solo puede ver información relacionada con sus equipos
+        $clienteRole->syncPermissions([
+            'Ver Clientes',
+            'Listar Sedes',
+            'Listar Equipos',
+            'Listar Reportes',
+            'Ver Hoja De Vida',
+            'Imprimir Hoja De Vida',
+            'Imprimir Reportes'
+        ]);
     }
 }

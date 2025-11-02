@@ -12,7 +12,7 @@ class ReporteController extends Controller
     public function __construct()
     {
         $this->middleware('can:Listar Reportes')->only(['index', 'show', 'reportesPorEquipo']);
-        $this->middleware('can:No Permitido')->only(['update', 'destroy']); // These methods are not meant to be used
+        $this->middleware('can:Crear Reportes')->only('store');
     }
 
     /**
@@ -58,59 +58,7 @@ class ReporteController extends Controller
      */
     public function update(Request $request, Reporte $reporte)
     {
-        $baseRules = [
-            'equipo_id' => 'required|exists:equipos,id',
-            'tipo_reporte' => 'required|string|max:20',
-            'correctivo' => 'nullable|string',
-            'preventivo' => 'nullable|string',
-            'fuerea_servicio' => 'nullable|string',
-            'requerido_cliente' => 'nullable|string',
-            'falla_reportada' => 'nullable|string',
-            'limpieza_interna' => 'sometimes|boolean',
-            'limpieza_externa' => 'sometimes|boolean',
-            'lubricacion' => 'sometimes|boolean',
-            'ajuste_angulacion' => 'sometimes|boolean',
-            'prueba_fugas' => 'sometimes|boolean',
-            'ajuste_general' => 'sometimes|boolean',
-            'cable_paciente' => 'sometimes|boolean',
-            'verificacion_software' => 'sometimes|boolean',
-            'filtros' => 'sometimes|boolean',
-            'verificacion_general' => 'sometimes|boolean',
-            'reemplazo_insumo' => 'sometimes|boolean',
-            'baterias' => 'sometimes|boolean',
-            'servicio_realizado' => 'nullable|string',
-            'observaciones' => 'nullable|string',
-            'firma_tecnico' => 'nullable|string',
-            'nombre_prestador' => 'nullable|string',
-            'cargo_prestador' => 'nullable|string',
-            'firma_cliente' => 'nullable|string',
-            'nombre_cliente' => 'nullable|string',
-            'cargo_cliente' => 'nullable|string',
-            'fecha_reporte' => 'required|date',
-        ];
-
-        // Reglas dinámicas para los chequeos
-        $tipo = $request->input('tipo_reporte');
-        if ($tipo === 'reporte_electronica') {
-            for ($i = 1; $i <= 17; $i++) {
-                $baseRules["chequeo$i"] = 'required|in:B,R,M,NA';
-            }
-            $baseRules["chequeo18"] = 'nullable|in:B,R,M,NA';
-        } else {
-            for ($i = 1; $i <= 18; $i++) {
-                $baseRules["chequeo$i"] = 'required|in:B,R,M,NA';
-            }
-        }
-
-        $validate = $request->validate($baseRules);
-
-        $reporte->update($validate);
-        $reporte->load(['equipo.sede.empresa']);
-
-        return response()->json([
-            'message' => 'Reporte actualizado exitosamente',
-            'data' => new ReporteResource($reporte),
-        ], 200);
+        abort(403, 'Operación no permitida. Los reportes no pueden ser modificados una vez creados.');
     }
 
     /**
@@ -118,8 +66,7 @@ class ReporteController extends Controller
      */
     public function destroy(Reporte $reporte)
     {
-        $reporte->delete();
-        return response()->json(['message' => 'Reporte eliminado'], 200);
+        abort(403, 'Operación no permitida. Los reportes no pueden ser eliminados.');
     }
 
     /**

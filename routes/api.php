@@ -30,22 +30,40 @@ Route::group([
 ], function ($router) {
     Route::post('/login', [AuthController::class, 'login'])->name('login')->middleware('throttle:10,1');
 
-    // Solo requiere estar autenticado, no un rol específico
-    Route::middleware('auth:api')->post('/refresh', [AuthController::class, 'refresh'])->name('refresh');
-
-    Route::middleware(['auth:api', 'role:Super-Admin'])->group(function () {
-        Route::post('/register', [AuthController::class, 'register'])->name('register');
+    // Rutas que solo requieren autenticación
+    Route::middleware('auth:api')->group(function () {
+        Route::post('/refresh', [AuthController::class, 'refresh'])->name('refresh');
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
         Route::post('/me', [AuthController::class, 'me'])->name('me');
+    });
+
+    // Rutas protegidas por permisos específicos
+    Route::middleware('auth:api')->group(function () {
+        // Registro de usuarios - solo Super-Admin
+        Route::middleware('role:Super-Admin')->post('/register', [AuthController::class, 'register'])->name('register');
+
+        // Usuarios
         Route::apiResource('users', UserController::class);
-        Route::apiResource('sedes', SedeController::class);
         Route::get('users/empresa/{empresaId}', [UserController::class, 'usuariosPorEmpresa']);
+
+        // Clientes
         Route::apiResource('clientes', ClienteController::class);
-        Route::apiResource('roles', RoleController::class);
+
+        // Sedes
+        Route::apiResource('sedes', SedeController::class);
+
+        // Roles (solo Super-Admin puede gestionar roles)
+        Route::middleware('role:Super-Admin')->apiResource('roles', RoleController::class);
+
+        // Equipos
         Route::apiResource('equipos', EquipoController::class);
         Route::get('equipos/empresa/{empresaId}', [EquipoController::class, 'equiposPorEmpresa']);
+
+        // Reportes
         Route::apiResource('reportes', ReporteController::class);
         Route::get('reportes/equipo/{equipoId}', [ReporteController::class, 'reportesPorEquipo']);
+
+        // Listas
         Route::get('lista/departamentos', [App\Http\Controllers\ListaController::class, 'listarDepartamentos']);
         Route::get('lista/municipios/{departamento}', [App\Http\Controllers\ListaController::class, 'listarMunicipios']);
         Route::get('lista/clientes', [App\Http\Controllers\ListaController::class, 'listarClientes']);

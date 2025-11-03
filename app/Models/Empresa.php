@@ -24,10 +24,31 @@ class Empresa extends Model
 
     public function setLogoAttribute($value)
     {
-        if (is_string($value) && !empty($value)) {
+        // Si el valor es un archivo (UploadedFile), lo convertimos a string mediante store()
+        if ($value instanceof \Illuminate\Http\UploadedFile) {
+            $this->attributes['logo'] = $value->store('logos', 'public');
+        }
+        // Si es una string válida (path del archivo), la guardamos
+        elseif (is_string($value) && !empty($value)) {
             $this->attributes['logo'] = $value;
-        } else {
+        }
+        // Si es null y ya tenemos un logo, no lo cambiamos (preservar logo existente)
+        elseif ($value === null && !array_key_exists('logo', $this->attributes)) {
             $this->attributes['logo'] = null;
+        }
+        // En otros casos, solo actualizamos si explícitamente se pasa null
+        elseif ($value === null) {
+            $this->attributes['logo'] = null;
+        }
+    }
+
+    /**
+     * Eliminar el archivo de logo del almacenamiento
+     */
+    public function deleteLogoFile()
+    {
+        if ($this->logo && file_exists(storage_path('app/public/' . $this->logo))) {
+            unlink(storage_path('app/public/' . $this->logo));
         }
     }
 
@@ -35,5 +56,4 @@ class Empresa extends Model
     {
         return $this->hasMany(Sede::class, 'empresa_id');
     }
-
 }

@@ -1,0 +1,508 @@
+{
+  "api_specification": {
+    "base_url": "http://localhost:8000/api",
+    "version": "1.0",
+    "authentication": "JWT Bearer Token",
+    "content_type": "application/json"
+  },
+  "endpoints": {
+    "authentication": {
+      "login": {
+        "method": "POST",
+        "path": "/auth/login",
+        "rate_limit": "10 per minute",
+        "public": true,
+        "request": {
+          "email": "string (required, email format)",
+          "password": "string (required, min 6 chars)"
+        },
+        "responses": {
+          "200": {
+            "access_token": "string",
+            "token_type": "bearer",
+            "expires_in": "number",
+            "user": "User object with roles and permissions"
+          },
+          "422": {
+            "message": "string",
+            "errors": "object with field validation errors"
+          }
+        }
+      },
+      "logout": {
+        "method": "POST",
+        "path": "/auth/logout",
+        "auth_required": true,
+        "responses": {
+          "200": {
+            "message": "Successfully logged out"
+          }
+        }
+      },
+      "refresh": {
+        "method": "POST",
+        "path": "/auth/refresh",
+        "auth_required": true,
+        "responses": {
+          "200": {
+            "access_token": "string",
+            "token_type": "bearer",
+            "expires_in": "number"
+          }
+        }
+      },
+      "me": {
+        "method": "POST",
+        "path": "/auth/me",
+        "auth_required": true,
+        "responses": {
+          "200": "User object with complete information"
+        }
+      }
+    },
+    "password_reset": {
+      "forgot_password": {
+        "method": "POST",
+        "path": "/auth/forgot-password",
+        "rate_limit": "5 per minute",
+        "public": true,
+        "request": {
+          "email": "string (required, email format)"
+        },
+        "responses": {
+          "200": {
+            "message": "Si el correo existe en nuestro sistema, recibirás un enlace de recuperación."
+          }
+        }
+      },
+      "validate_token": {
+        "method": "POST",
+        "path": "/auth/validate-token",
+        "rate_limit": "10 per minute",
+        "public": true,
+        "request": {
+          "token": "string (required)"
+        },
+        "responses": {
+          "200": {
+            "message": "Token válido",
+            "valid": true
+          },
+          "400": {
+            "message": "Token inválido o expirado",
+            "valid": false
+          }
+        }
+      },
+      "reset_password": {
+        "method": "POST",
+        "path": "/auth/reset-password",
+        "rate_limit": "5 per minute",
+        "public": true,
+        "request": {
+          "email": "string (required, email format)",
+          "password": "string (required, min 8 chars)",
+          "password_confirmation": "string (required, must match password)",
+          "token": "string (required)"
+        },
+        "responses": {
+          "200": {
+            "message": "Contraseña actualizada exitosamente"
+          },
+          "422": {
+            "message": "string",
+            "errors": "object with field validation errors"
+          }
+        }
+      }
+    },
+    "users": {
+      "list": {
+        "method": "GET",
+        "path": "/auth/users",
+        "auth_required": true,
+        "permissions": ["Listar Usuarios"],
+        "responses": {
+          "200": {
+            "data": "Array of User objects"
+          }
+        }
+      },
+      "create": {
+        "method": "POST",
+        "path": "/auth/users",
+        "auth_required": true,
+        "permissions": ["Crear Usuarios"],
+        "request": {
+          "name": "string (required)",
+          "email": "string (required, email format, unique)",
+          "password": "string (required, min 8 chars)",
+          "password_confirmation": "string (required)",
+          "empresa_id": "number (required)",
+          "roles": "array of role names (optional)"
+        }
+      },
+      "show": {
+        "method": "GET",
+        "path": "/auth/users/{id}",
+        "auth_required": true,
+        "permissions": ["Listar Usuarios"]
+      },
+      "update": {
+        "method": "PUT",
+        "path": "/auth/users/{id}",
+        "auth_required": true,
+        "permissions": ["Editar Usuarios"]
+      },
+      "delete": {
+        "method": "DELETE",
+        "path": "/auth/users/{id}",
+        "auth_required": true,
+        "permissions": ["Eliminar Usuarios"]
+      },
+      "by_empresa": {
+        "method": "GET",
+        "path": "/auth/users/empresa/{empresaId}",
+        "auth_required": true,
+        "permissions": ["Listar Usuarios"]
+      }
+    },
+    "clientes": {
+      "list": {
+        "method": "GET",
+        "path": "/auth/clientes",
+        "auth_required": true,
+        "permissions": ["Listar Clientes", "Ver Clientes"]
+      },
+      "create": {
+        "method": "POST",
+        "path": "/auth/clientes",
+        "auth_required": true,
+        "permissions": ["Crear Clientes"],
+        "request": {
+          "nombre": "string (required)",
+          "nit": "string (required)",
+          "telefono": "string (optional)",
+          "email": "string (optional, email format)",
+          "direccion": "string (optional)",
+          "departamento_id": "number (required)",
+          "municipio_id": "number (required)"
+        }
+      },
+      "show": {
+        "method": "GET",
+        "path": "/auth/clientes/{id}",
+        "auth_required": true,
+        "permissions": ["Ver Clientes"]
+      },
+      "update": {
+        "method": "PUT",
+        "path": "/auth/clientes/{id}",
+        "auth_required": true,
+        "permissions": ["Editar Clientes"]
+      },
+      "delete": {
+        "method": "DELETE",
+        "path": "/auth/clientes/{id}",
+        "auth_required": true,
+        "permissions": ["Eliminar Clientes"]
+      }
+    },
+    "sedes": {
+      "list": {
+        "method": "GET",
+        "path": "/auth/sedes",
+        "auth_required": true,
+        "permissions": ["Listar Sedes"]
+      },
+      "create": {
+        "method": "POST",
+        "path": "/auth/sedes",
+        "auth_required": true,
+        "permissions": ["Crear Sedes"],
+        "request": {
+          "nombre": "string (required)",
+          "direccion": "string (required)",
+          "telefono": "string (optional)",
+          "cliente_id": "number (required)",
+          "departamento_id": "number (required)",
+          "municipio_id": "number (required)"
+        }
+      },
+      "show": {
+        "method": "GET",
+        "path": "/auth/sedes/{id}",
+        "auth_required": true,
+        "permissions": ["Listar Sedes"]
+      },
+      "update": {
+        "method": "PUT",
+        "path": "/auth/sedes/{id}",
+        "auth_required": true,
+        "permissions": ["Editar Sedes"]
+      },
+      "delete": {
+        "method": "DELETE",
+        "path": "/auth/sedes/{id}",
+        "auth_required": true,
+        "permissions": ["Eliminar Sedes"]
+      }
+    },
+    "equipos": {
+      "list": {
+        "method": "GET",
+        "path": "/auth/equipos",
+        "auth_required": true,
+        "permissions": ["Listar Equipos"]
+      },
+      "create": {
+        "method": "POST",
+        "path": "/auth/equipos",
+        "auth_required": true,
+        "permissions": ["Crear Equipos"]
+      },
+      "show": {
+        "method": "GET",
+        "path": "/auth/equipos/{id}",
+        "auth_required": true,
+        "permissions": ["Listar Equipos"]
+      },
+      "update": {
+        "method": "PUT",
+        "path": "/auth/equipos/{id}",
+        "auth_required": true,
+        "permissions": ["Editar Equipos"]
+      },
+      "delete": {
+        "method": "DELETE",
+        "path": "/auth/equipos/{id}",
+        "auth_required": true,
+        "permissions": ["Eliminar Equipos"]
+      },
+      "by_empresa": {
+        "method": "GET",
+        "path": "/auth/equipos/empresa/{empresaId}",
+        "auth_required": true,
+        "permissions": ["Listar Equipos"]
+      }
+    },
+    "reportes": {
+      "list": {
+        "method": "GET",
+        "path": "/auth/reportes",
+        "auth_required": true,
+        "permissions": ["Listar Reportes"]
+      },
+      "create": {
+        "method": "POST",
+        "path": "/auth/reportes",
+        "auth_required": true,
+        "permissions": ["Crear Reportes"]
+      },
+      "show": {
+        "method": "GET",
+        "path": "/auth/reportes/{id}",
+        "auth_required": true,
+        "permissions": ["Listar Reportes"]
+      },
+      "update": {
+        "method": "PUT",
+        "path": "/auth/reportes/{id}",
+        "auth_required": true,
+        "permissions": ["Firmar Reportes"]
+      },
+      "delete": {
+        "method": "DELETE",
+        "path": "/auth/reportes/{id}",
+        "auth_required": true,
+        "permissions": ["Eliminar Reportes"]
+      },
+      "by_equipo": {
+        "method": "GET",
+        "path": "/auth/reportes/equipo/{equipoId}",
+        "auth_required": true,
+        "permissions": ["Listar Reportes"]
+      }
+    },
+    "roles": {
+      "list": {
+        "method": "GET",
+        "path": "/auth/roles",
+        "auth_required": true,
+        "middleware": ["role:Super-Admin"]
+      },
+      "create": {
+        "method": "POST",
+        "path": "/auth/roles",
+        "auth_required": true,
+        "middleware": ["role:Super-Admin"]
+      },
+      "show": {
+        "method": "GET",
+        "path": "/auth/roles/{id}",
+        "auth_required": true,
+        "middleware": ["role:Super-Admin"]
+      },
+      "update": {
+        "method": "PUT",
+        "path": "/auth/roles/{id}",
+        "auth_required": true,
+        "middleware": ["role:Super-Admin"]
+      },
+      "delete": {
+        "method": "DELETE",
+        "path": "/auth/roles/{id}",
+        "auth_required": true,
+        "middleware": ["role:Super-Admin"]
+      }
+    },
+    "listas": {
+      "departamentos": {
+        "method": "GET",
+        "path": "/auth/lista/departamentos",
+        "auth_required": true,
+        "permissions": ["Listar Departamentos"]
+      },
+      "municipios": {
+        "method": "GET",
+        "path": "/auth/lista/municipios/{departamento}",
+        "auth_required": true,
+        "permissions": ["Listar Municipios"]
+      },
+      "clientes": {
+        "method": "GET",
+        "path": "/auth/lista/clientes",
+        "auth_required": true,
+        "permissions": ["Ver Clientes"]
+      },
+      "sedes": {
+        "method": "GET",
+        "path": "/auth/lista/sedes/{cliente}",
+        "auth_required": true,
+        "permissions": ["Listar Sedes"]
+      },
+      "accesorios": {
+        "method": "GET",
+        "path": "/auth/lista/accesorios",
+        "auth_required": true,
+        "permissions": ["Listar Accesorios"]
+      },
+      "tipos_equipos": {
+        "method": "GET",
+        "path": "/auth/lista/tipos-equipos",
+        "auth_required": true,
+        "permissions": ["Listar Tipos Equipos"]
+      },
+      "roles": {
+        "method": "GET",
+        "path": "/auth/lista/roles",
+        "auth_required": true,
+        "permissions": ["Listar Roles"]
+      },
+      "permisos": {
+        "method": "GET",
+        "path": "/auth/lista/permisos",
+        "auth_required": true,
+        "permissions": ["Listar Permisos"]
+      }
+    }
+  },
+  "permissions": {
+    "usuarios": [
+      "Crear Usuarios",
+      "Editar Usuarios",
+      "Listar Usuarios",
+      "Eliminar Usuarios"
+    ],
+    "clientes": [
+      "Crear Clientes",
+      "Editar Clientes",
+      "Listar Clientes",
+      "Eliminar Clientes",
+      "Ver Clientes"
+    ],
+    "sedes": [
+      "Crear Sedes",
+      "Editar Sedes",
+      "Listar Sedes",
+      "Eliminar Sedes"
+    ],
+    "equipos": [
+      "Crear Equipos",
+      "Editar Equipos",
+      "Listar Equipos",
+      "Eliminar Equipos"
+    ],
+    "reportes": [
+      "Crear Reportes",
+      "Firmar Reportes",
+      "Listar Reportes",
+      "Imprimir Reportes"
+    ],
+    "hoja_vida": [
+      "Crear Hoja De Vida",
+      "Ver Hoja De Vida",
+      "Imprimir Hoja De Vida"
+    ],
+    "roles_permisos": [
+      "Crear Roles",
+      "Editar Roles",
+      "Listar Roles",
+      "Eliminar Roles",
+      "Listar Permisos",
+      "Asignar Permisos"
+    ],
+    "listas": [
+      "Listar Departamentos",
+      "Listar Municipios",
+      "Listar Accesorios",
+      "Listar Tipos Equipos"
+    ]
+  },
+  "roles": {
+    "Super-Admin": {
+      "description": "Acceso completo al sistema",
+      "permissions": "all"
+    },
+    "Administrador": {
+      "description": "Gestión de usuarios, clientes, sedes y equipos",
+      "permissions": [
+        "Crear Usuarios", "Editar Usuarios", "Listar Usuarios", "Eliminar Usuarios",
+        "Crear Clientes", "Editar Clientes", "Listar Clientes", "Eliminar Clientes", "Ver Clientes",
+        "Crear Sedes", "Editar Sedes", "Listar Sedes", "Eliminar Sedes",
+        "Crear Equipos", "Editar Equipos", "Listar Equipos", "Eliminar Equipos",
+        "Listar Reportes", "Ver Hoja De Vida", "Imprimir Hoja De Vida",
+        "Listar Departamentos", "Listar Municipios", "Listar Accesorios", "Listar Tipos Equipos"
+      ]
+    },
+    "Operador": {
+      "description": "Gestión de equipos y reportes",
+      "permissions": [
+        "Listar Usuarios", "Listar Clientes", "Ver Clientes", "Listar Sedes",
+        "Crear Equipos", "Editar Equipos", "Listar Equipos",
+        "Crear Reportes", "Firmar Reportes", "Listar Reportes", "Imprimir Reportes",
+        "Crear Hoja De Vida", "Ver Hoja De Vida", "Imprimir Hoja De Vida",
+        "Listar Departamentos", "Listar Municipios", "Listar Accesorios", "Listar Tipos Equipos"
+      ]
+    },
+    "Cliente": {
+      "description": "Solo consulta de información propia",
+      "permissions": [
+        "Ver Clientes", "Listar Sedes", "Listar Equipos", "Listar Reportes",
+        "Ver Hoja De Vida", "Imprimir Hoja De Vida", "Imprimir Reportes"
+      ]
+    }
+  },
+  "rate_limits": {
+    "login": "10 per minute",
+    "forgot_password": "5 per minute",
+    "reset_password": "5 per minute",
+    "validate_token": "10 per minute"
+  },
+  "security": {
+    "csrf_protection": false,
+    "cors_enabled": true,
+    "user_enumeration_protection": true,
+    "generic_error_responses": true
+  }
+}

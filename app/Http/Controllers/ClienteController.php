@@ -41,6 +41,8 @@ class ClienteController extends Controller
             $cliente = new Cliente();
             $cliente->nombre = $validated['nombre'];
             $cliente->nit = $validated['nit'];
+            $cliente->tipo = 'cliente'; // Asegurar que es un cliente
+
             if (isset($validated['logo'])) {
                 $cliente->logo = $validated['logo']->store('logos', 'public');
             }
@@ -88,9 +90,15 @@ class ClienteController extends Controller
     {
         $validated = $request->validated();
 
+        // Manejar el logo por separado para evitar sobreescribirlo
         if (isset($validated['logo'])) {
+            // Eliminar el logo anterior si existe
+            $cliente->deleteLogoFile();
             $cliente->logo = $validated['logo']->store('logos', 'public');
         }
+
+        // Remover el logo de los datos validados para evitar conflictos
+        unset($validated['logo']);
 
         $cliente->fill($validated);
         $cliente->save();
@@ -108,6 +116,9 @@ class ClienteController extends Controller
      */
     public function destroy(Cliente $cliente)
     {
+        // Eliminar el archivo de logo si existe
+        $cliente->deleteLogoFile();
+
         $cliente->delete();
 
         return response()->json(['message' => 'Cliente eliminado con éxito']);

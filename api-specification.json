@@ -324,6 +324,32 @@
         "permissions": ["Listar Reportes"]
       }
     },
+    "empresa_data": {
+      "usuarios_empresa": {
+        "method": "GET",
+        "path": "/auth/mi-empresa/usuarios",
+        "auth_required": true,
+        "description": "Obtiene todos los usuarios de la empresa del usuario logueado"
+      },
+      "sedes_empresa": {
+        "method": "GET",
+        "path": "/auth/mi-empresa/sedes",
+        "auth_required": true,
+        "description": "Obtiene todas las sedes de la empresa del usuario logueado"
+      },
+      "equipos_empresa": {
+        "method": "GET",
+        "path": "/auth/mi-empresa/equipos",
+        "auth_required": true,
+        "description": "Obtiene todos los equipos de la empresa del usuario logueado"
+      },
+      "info_empresa": {
+        "method": "GET",
+        "path": "/auth/mi-empresa/info",
+        "auth_required": true,
+        "description": "Obtiene información general y estadísticas de la empresa del usuario logueado"
+      }
+    },
     "roles": {
       "list": {
         "method": "GET",

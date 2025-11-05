@@ -10,6 +10,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\EquipoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\EmpresaDataController;
 
 /*
 |--------------------------------------------------------------------------
@@ -86,5 +87,11 @@ Route::group([
         Route::get('lista/tipos-equipos', [App\Http\Controllers\ListaController::class, 'listarTiposEquipos']);
         Route::get('lista/roles', [App\Http\Controllers\ListaController::class, 'listarRoles']);
         Route::get('lista/permisos', [App\Http\Controllers\ListaController::class, 'listarPermisos']);
+
+        // Datos de la empresa del usuario logueado
+        Route::get('mi-empresa/usuarios', [App\Http\Controllers\EmpresaDataController::class, 'usuariosEmpresa']);
+        Route::get('mi-empresa/sedes', [App\Http\Controllers\EmpresaDataController::class, 'sedesEmpresa']);
+        Route::get('mi-empresa/equipos', [App\Http\Controllers\EmpresaDataController::class, 'equiposEmpresa']);
+        Route::get('mi-empresa/info', [App\Http\Controllers\EmpresaDataController::class, 'infoEmpresa']);
     });
 });

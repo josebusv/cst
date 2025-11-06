@@ -19,7 +19,11 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => [
+        'http://localhost:4200',           // Desarrollo Angular
+        'http://localhost:3000',           // Desarrollo React (si usas)
+        'https://cst-colombia.com.co',     // 👈 AGREGAR ESTA LÍNEA
+    ],
 
     'allowed_origins_patterns' => [],
 

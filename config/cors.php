@@ -20,6 +20,7 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
+        'http://front_cst.test',           // Desarrollo Angular
         'http://localhost:4200',           // Desarrollo Angular
         'http://localhost:3000',           // Desarrollo React (si usas)
         'https://cst-colombia.com.co',     // 👈 AGREGAR ESTA LÍNEA
@@ -33,6 +34,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];

@@ -17,13 +17,14 @@ class UserResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'telefono' => $this->telefono,
             'email' => $this->email,
             'roles' => $this->getRoleNames(),
             'sede' => $this->whenLoaded('sede', function () {
                 return [
                     'id' => $this->sede->id,
                     'nombre' => $this->sede->nombre,
-                    'empresa' => $this->whenLoaded('sede.empresa', function() {
+                    'empresa' => $this->whenLoaded('sede.empresa', function () {
                         return [
                             'id' => optional($this->sede->empresa)->id,
                             'nombre' => optional($this->sede->empresa)->nombre,

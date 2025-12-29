@@ -19,6 +19,7 @@ use App\Http\Resources\AccesorioListResource;
 use App\Http\Resources\TipoEquipoListResource;
 use App\Http\Resources\RoleListResource;
 use App\Http\Resources\PermissionResource;
+use App\Models\Empresa;
 
 class ListaController extends Controller
 {
@@ -64,9 +65,10 @@ class ListaController extends Controller
     /**
      * Lista Sedes
      */
-    public function listarSedes(Cliente $cliente)
+    public function listarSedes($empresa)
     {
-        $sedes = $cliente->sedes;
+        $empresa = Empresa::findOrFail($empresa);
+        $sedes = $empresa->sedes;
         return SedeListResource::collection($sedes);
     }
 

@@ -13,7 +13,7 @@ class AuthController extends Controller
 {
     /**
      * Create a new controller instance.
-     * 
+     *
      * @return void
      */
 
@@ -119,6 +119,7 @@ class AuthController extends Controller
             'expires_in' => auth('api')->factory()->getTTL() * 60,
             'user' => new UserResource($user),
             'empresa_tipo' => $empresaTipo,
+            'empresa_id' => optional(optional($user->sede)->empresa)->id, // Retorna el ID de la empresa
         ]);
     }
 }

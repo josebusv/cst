@@ -24,7 +24,16 @@ class SedeController extends Controller
      */
     public function index()
     {
-        $empresa = auth()->user()->empresa;
+        $user = auth()->user();
+
+        if (!$user->sede || !$user->sede->empresa) {
+            return response()->json([
+                'message' => 'Usuario no tiene empresa asociada',
+                'data' => []
+            ], 200);
+        }
+
+        $empresa = $user->sede->empresa;
 
         $query = Sede::with('empresa');
 
@@ -58,7 +67,13 @@ class SedeController extends Controller
      */
     public function show(Sede $sede)
     {
-        $empresa = auth()->user()->empresa;
+        $user = auth()->user();
+
+        if (!$user->sede || !$user->sede->empresa) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $empresa = $user->sede->empresa;
 
         // Ensure client users can only see their own sedes
         if ($empresa->tipo === 'Cliente' && $sede->empresa_id !== $empresa->id) {
@@ -74,7 +89,13 @@ class SedeController extends Controller
      */
     public function update(UpdateSedeRequest $request, Sede $sede)
     {
-        $empresa = auth()->user()->empresa;
+        $user = auth()->user();
+
+        if (!$user->sede || !$user->sede->empresa) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $empresa = $user->sede->empresa;
 
         // Ensure client users can only update their own sedes
         if ($empresa->tipo === 'Cliente' && $sede->empresa_id !== $empresa->id) {
@@ -97,7 +118,13 @@ class SedeController extends Controller
      */
     public function destroy(Sede $sede)
     {
-        $empresa = auth()->user()->empresa;
+        $user = auth()->user();
+
+        if (!$user->sede || !$user->sede->empresa) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $empresa = $user->sede->empresa;
 
         // Ensure client users can only delete their own sedes
         if ($empresa->tipo === 'Cliente' && $sede->empresa_id !== $empresa->id) {

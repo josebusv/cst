@@ -78,12 +78,12 @@ class User extends Authenticatable implements JWTSubject
     public function empresa()
     {
         return $this->hasOneThrough(
-            Empresa::class,    // Modelo destino
-            Sede::class,       // Modelo intermedio
-            'empresa_id',      // Foreign key en sedes que referencia a empresas.id
-            'id',              // Foreign key en empresas que referencia a sedes.empresa_id
-            'sede_id',         // Local key en users
-            'id'              // Local key en sedes
+            Empresa::class,
+            Sede::class,
+            'id',
+            'empresa_id',
+            'sede_id',
+            'id'
         );
     }
 

@@ -72,7 +72,25 @@ class AuthController extends Controller
     public function me()
     {
         $user = auth('api')->user()->load('sede.empresa');
-        return new UserResource($user);
+
+        return response()->json([
+            'id' => $user->id,
+            'name' => $user->name,
+            'telefono' => $user->telefono,
+            'email' => $user->email,
+            'roles' => $user->getRoleNames(),
+            'sede' => $user->sede ? [
+                'id' => $user->sede->id,
+                'nombre' => $user->sede->nombre,
+            ] : null,
+            'empresa' => $user->sede && $user->sede->empresa ? [
+                'id' => $user->sede->empresa->id,
+                'nombre' => $user->sede->empresa->nombre,
+            ] : null,
+            'empresa_tipo' => optional(optional($user->sede)->empresa)->tipo,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+        ]);
     }
 
     /**

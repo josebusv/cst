@@ -4,79 +4,98 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Restablecimiento de Contraseña - {{ config('app.name') }}</title>
-    <div style="display:none; font-size:1px; color:#f4f4f7; line-height:1px; max-height:0px; max-width:0px; opacity:0; overflow:hidden;">
-        Solicitaste un restablecimiento de contraseña. Haz clic en el botón a continuación para continuar.
-    </div>
+    <!--[if mso]>
+    <style type="text/css">
+        body, table, td, p, a { font-family: Arial, sans-serif !important; }
+    </style>
+    <![endif]-->
+    <style type="text/css">
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+    </style>
 </head>
-<body bgcolor="#f4f4f7" style="margin: 0; padding: 0;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f4f4f7">
+<body style="margin: 0; padding: 0; background-color: #f3f4f6; -webkit-text-size-adjust: 100%;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f3f4f6;">
         <tr>
-            <td align="center" style="padding: 20px 10px;">
-                <table width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="max-width: 600px; border-radius: 8px; border-collapse: collapse;">
+            <td align="center" style="padding: 40px 20px;">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+                    <!-- Header -->
                     <tr>
-                        <td style="padding: 40px; font-family: Arial, sans-serif; color: #333333;">
-
-                            <h1 style="font-size: 24px; color: #1e40af; margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #eeeeee; padding-bottom: 15px;">
-                                🔑 Restablecimiento de Contraseña
+                        <td align="center" style="padding: 40px 40px 20px 40px;">
+                            <div style="width: 120px; display: inline-block;">
+                                <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name') }}" style="width: 100%; height: auto; display: block;">
+                            </div>
+                            <h1 style="margin: 24px 0 0 0; font-size: 24px; font-weight: 700; color: #111827; text-align: center;">
+                                Restablecer Contraseña
                             </h1>
+                        </td>
+                    </tr>
 
-                            <p style="font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding: 20px 40px 40px 40px;">
+                            <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.6; color: #374151;">
                                 Hola <strong>{{ $user->name }}</strong>,
                             </p>
-
-                            <p style="font-size: 16px; line-height: 1.5; margin-bottom: 30px;">
-                                Recibimos una solicitud para restablecer la contraseña de tu cuenta. Haz clic en el siguiente botón para establecer una nueva contraseña:
+                            <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #4b5563;">
+                                Recibimos una solicitud para restablecer la contraseña de tu cuenta en <strong>{{ config('app.name') }}</strong>. No te preocupes, es un proceso sencillo.
                             </p>
 
-                            <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 30px auto;">
+                            <!-- Button -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
                                 <tr>
-                                    <td align="center" bgcolor="#2563eb" style="border-radius: 6px; padding: 12px 25px;">
-                                        <a href="{{ $url }}" target="_blank" style="font-size: 16px; font-weight: bold; color: #ffffff; text-decoration: none; display: inline-block; font-family: Arial, sans-serif;">
-                                            Restablecer Contraseña
+                                    <td align="center" style="padding: 10px 0 30px 0;">
+                                        <a href="{{ $url }}" target="_blank" style="background-color: #2563eb; color: #ffffff; padding: 14px 32px; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
+                                            Cambiar Contraseña
                                         </a>
                                     </td>
                                 </tr>
                             </table>
 
-                            <p style="font-size: 14px; color: #555555; margin-bottom: 15px; text-align: center;">
-                                Este enlace expirará en <strong>{{ $expiration }} minutos</strong>.
+                            <!-- Expiration Info -->
+                            <p style="margin: 0 0 24px 0; font-size: 14px; color: #6b7280; text-align: center;">
+                                Este enlace es válido por <strong>{{ $expiration }} minutos</strong> por motivos de seguridad.
                             </p>
 
-                            <table cellpadding="0" cellspacing="0" border="0" style="margin: 20px 0; padding: 10px 20px; border-left: 4px solid #f97316; background-color: #fef3c7; width: 100%;">
-                                <tr>
-                                    <td>
-                                        <p style="font-size: 14px; line-height: 1.5; color: #9a3412; margin: 0;">
-                                            <strong>¿No solicitaste este cambio?</strong> Puedes ignorar este email. Tu contraseña actual no se cambiará.
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
+                            <!-- Security Notice -->
+                            <div style="background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 4px; margin-bottom: 30px;">
+                                <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #92400e;">
+                                    <strong>¿No solicitaste este cambio?</strong> Si no fuiste tú, puedes ignorar este mensaje de forma segura. Tu contraseña actual permanecerá sin cambios.
+                                </p>
+                            </div>
 
-                            <p style="font-size: 14px; line-height: 1.5; margin-top: 30px;">
-                                Si tienes problemas con el botón, copia y pega este enlace en tu navegador:
+                            <!-- Link Fallback -->
+                            <p style="margin: 0 0 8px 0; font-size: 13px; color: #9ca3af;">
+                                Si tienes problemas con el botón, copia y pega esta dirección en tu navegador:
                             </p>
-                            <p style="font-size: 14px; line-height: 1.5;">
+                            <p style="margin: 0; font-size: 13px; word-break: break-all;">
                                 <a href="{{ $url }}" target="_blank" style="color: #2563eb; text-decoration: underline;">
                                     {{ $url }}
                                 </a>
                             </p>
 
-                            <p style="font-size: 16px; line-height: 1.5; margin-top: 40px;">
+                            <p style="margin: 40px 0 0 0; font-size: 15px; line-height: 1.6; color: #4b5563;">
                                 Saludos,<br>
-                                <strong>El Equipo de {{ config('app.name') }}</strong>
+                                <strong>El equipo de {{ config('app.name') }}</strong>
                             </p>
+                        </td>
+                    </tr>
 
-                            <hr style="border: none; border-top: 1px solid #eeeeee; margin-top: 30px; margin-bottom: 15px;">
-
-                            <p style="font-size: 12px; color: #999999; text-align: center; margin-top: 15px;">
-                                Recibiste este correo electrónico porque se solicitó un restablecimiento de contraseña para la cuenta <strong>{{ $user->email }}</strong> en {{ config('app.name') }}.
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 30px 40px; background-color: #f9fafb; border-top: 1px solid #f3f4f6;">
+                            <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #9ca3af; text-align: center;">
+                                Has recibido este correo porque se solicitó un cambio de contraseña para la cuenta <strong>{{ $user->email }}</strong>.
+                                <br><br>
+                                &copy; {{ date('Y') }} {{ config('app.name') }}. Todos los derechos reservados.
                             </p>
-
                         </td>
                     </tr>
                 </table>
-                </td>
+            </td>
         </tr>
     </table>
-    </body>
+</body>
 </html>

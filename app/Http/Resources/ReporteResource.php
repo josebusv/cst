@@ -20,6 +20,8 @@ class ReporteResource extends JsonResource
             'tipo_reporte' => $this->tipo_reporte,
             'correctivo' => $this->correctivo,
             'preventivo' => $this->preventivo,
+            'normal' => $this->normal,
+            'irregular' => $this->irregular,
             'fuera_servicio' => $this->fuera_servicio,
             'requerido_cliente' => $this->requerido_cliente,
             'falla_reportada' => $this->falla_reportada,

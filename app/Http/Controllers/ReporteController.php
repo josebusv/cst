@@ -70,6 +70,48 @@ class ReporteController extends Controller
     }
 
     /**
+     * Update the técnico signature for a report.
+     */
+    public function updateFirmaTecnico(Request $request, Reporte $reporte)
+    {
+        $request->validate([
+            'firma_tecnico' => 'required|string',
+        ]);
+
+        $reporte->update([
+            'firma_tecnico' => $request->firma_tecnico,
+        ]);
+
+        $reporte->load(['equipo.sede.empresa']);
+
+        return response()->json([
+            'message' => 'Firma técnica actualizada exitosamente',
+            'data' => new ReporteResource($reporte),
+        ]);
+    }
+
+    /**
+     * Update the cliente signature for a report.
+     */
+    public function updateFirmaCliente(Request $request, Reporte $reporte)
+    {
+        $request->validate([
+            'firma_cliente' => 'required|string',
+        ]);
+
+        $reporte->update([
+            'firma_cliente' => $request->firma_cliente,
+        ]);
+
+        $reporte->load(['equipo.sede.empresa']);
+
+        return response()->json([
+            'message' => 'Firma de cliente actualizada exitosamente',
+            'data' => new ReporteResource($reporte),
+        ]);
+    }
+
+    /**
      * Obtiene todos los reportes de un equipo específico.
      */
     public function reportesPorEquipo($equipoId)

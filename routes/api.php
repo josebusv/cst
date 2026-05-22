@@ -77,6 +77,8 @@ Route::group([
         // Reportes
         Route::apiResource('reportes', ReporteController::class);
         Route::get('reportes/equipo/{equipoId}', [ReporteController::class, 'reportesPorEquipo']);
+        Route::patch('reportes/{reporte}/firma-tecnico', [ReporteController::class, 'updateFirmaTecnico'])->name('reportes.firma-tecnico');
+        Route::patch('reportes/{reporte}/firma-cliente', [ReporteController::class, 'updateFirmaCliente'])->name('reportes.firma-cliente');
 
         // Listas
         Route::get('lista/departamentos', [App\Http\Controllers\ListaController::class, 'listarDepartamentos']);

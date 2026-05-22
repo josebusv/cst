@@ -67,6 +67,8 @@ class ReporteResource extends JsonResource
             'cliente' => $this->whenLoaded('equipo.sede.empresa', function () {
                 return $this->equipo->sede->empresa->nombre ?? null;
             }),
+            'firma_tecnico_missing' => empty($this->firma_tecnico),
+            'firma_cliente_missing' => empty($this->firma_cliente),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

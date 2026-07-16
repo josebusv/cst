@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Validator;
 use Tymon\JWTAuth\Exceptions\JWTException;
+use Spatie\Permission\Models\Role;
 
 class AuthController extends Controller
 {
@@ -59,6 +60,13 @@ class AuthController extends Controller
 
         if (! $token = auth('api')->attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $user = auth('api')->user();
+        $empresaTipo = optional(optional($user->sede)->empresa)->tipo;
+
+        if ($empresaTipo === 'cliente' && !$user->hasRole('Cliente')) {
+            $user->assignRole('Cliente');
         }
 
         return $this->respondWithToken($token);
@@ -113,7 +121,8 @@ class AuthController extends Controller
     public function refresh()
     {
         try {
-            return $this->respondWithToken(auth('api')->refresh());
+            $token = auth('api')->refresh();
+            return $this->respondWithToken($token);
         } catch (JWTException $e) {
             return response()->json(['error' => 'No se pudo refrescar el token'], 401);
         }

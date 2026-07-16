@@ -16,6 +16,8 @@ class Consumible extends Model
 
     public function equipos()
     {
-        return $this->belongsToMany(Equipo::class, 'consumible_equipo');
+        return $this->belongsToMany(Equipo::class, 'consumible_equipo', 'consumible_id', 'equipo_id')
+            ->withPivot(['cantidad', 'observaciones'])
+            ->withTimestamps();
     }
 }

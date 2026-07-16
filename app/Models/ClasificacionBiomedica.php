@@ -9,8 +9,10 @@ class ClasificacionBiomedica extends Model
 {
     use HasFactory;
 
+    protected $table = 'clasificaciones_biomedicas';
+
     protected $fillable = [
         'nombre',
-        'descripcion',
+        'activo',
     ];
 }

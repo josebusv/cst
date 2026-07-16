@@ -3,13 +3,15 @@
 namespace App\Policies;
 
 use App\Models\User;
+use App\Models\Empresa;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class EmpresaPolicy
 {
     use HandlesAuthorization;
 
-    public function viewAny(Empresa $empresa)
+    public function viewAny(User $user)
     {
-        return $user->hasPermission('Listar Empresas');
+        return $user->can('Listar Empresas');
     }
 }

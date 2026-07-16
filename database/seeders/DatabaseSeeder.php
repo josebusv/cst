@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
             AccesorioSeeder::class,
             SedeSeeder::class,
             PermissionsDemoSeeder::class,
+            UnidadesTecnicasSeeder::class,
+            ConsumiblesSeeder::class,
         ]);
     }
 }

@@ -23,7 +23,9 @@ return [
         'http://front_cst.test',           // Desarrollo Angular
         'http://localhost:4200',           // Desarrollo Angular
         'http://localhost:3000',           // Desarrollo React (si usas)
-        'https://cst-colombia.com.co',     // 👈 AGREGAR ESTA LÍNEA
+        'https://cst-colombia.com.co',     // Producción front
+        'https://test.cst-colombia.com.co', // Staging front
+        'https://admin.cst-colombia.com.co', // Admin (si aplica)
     ],
 
     'allowed_origins_patterns' => [],

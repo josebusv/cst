@@ -1,0 +1,18 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+
+    paths:
+        - app/
+
+    level: 5
+
+    parallel:
+        maximumNumberOfProcesses: 4
+
+    ignoreErrors:
+        - identifier: missingType.iterableValue
+        - identifier: missingType.generics
+        - '#Method .* has no return type specified.#'
+        - '#Access to an undefined property#'

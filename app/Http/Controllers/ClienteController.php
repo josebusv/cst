@@ -6,8 +6,11 @@ use Illuminate\Http\Request;
 use App\Http\Requests\UpdateClienteRequest;
 use App\Http\Requests\StoreClienteRequest;
 use App\Models\Cliente;
+use App\Models\Empresa;
+use App\Models\User;
 use App\Http\Resources\ClienteResource;
 use App\Http\Resources\SedeResource;
+use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\DB;
 
 class ClienteController extends Controller
@@ -122,5 +125,32 @@ class ClienteController extends Controller
         $cliente->delete();
 
         return response()->json(['message' => 'Cliente eliminado con éxito']);
+    }
+
+    public function tecnicos($clienteId)
+    {
+        $empresa = Empresa::findOrFail($clienteId);
+        $tecnicos = $empresa->tecnicos()->with('roles')->get();
+        return UserResource::collection($tecnicos);
+    }
+
+    public function asignarTecnico(Request $request, $clienteId)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $empresa = Empresa::findOrFail($clienteId);
+        $empresa->tecnicos()->syncWithoutDetaching([$request->user_id]);
+
+        return response()->json(['message' => 'Técnico asignado exitosamente']);
+    }
+
+    public function removerTecnico($clienteId, $userId)
+    {
+        $empresa = Empresa::findOrFail($clienteId);
+        $empresa->tecnicos()->detach($userId);
+
+        return response()->json(['message' => 'Técnico removido exitosamente']);
     }
 }

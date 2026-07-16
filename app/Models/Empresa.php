@@ -56,4 +56,14 @@ class Empresa extends Model
     {
         return $this->hasMany(Sede::class, 'empresa_id');
     }
+
+    public function tickets()
+    {
+        return $this->hasMany(Ticket::class);
+    }
+
+    public function tecnicos()
+    {
+        return $this->belongsToMany(User::class, 'cliente_tecnico', 'empresa_id', 'user_id');
+    }
 }

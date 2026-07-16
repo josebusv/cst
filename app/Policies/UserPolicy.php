@@ -16,12 +16,12 @@ class UserPolicy
 
     public function viewAny(User $user)
     {
-        return $user->hasPermission('Listar Usuarios');
+        return $user->can('Listar Usuarios');
     }
 
     public function update(User $user, User $targetUser)
     {
-        return $user->hasPermission('Editar Usuarios');
+        return $user->can('Editar Usuarios');
     }
 
 }

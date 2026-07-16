@@ -87,6 +87,21 @@ class User extends Authenticatable implements JWTSubject
         );
     }
 
+    public function clientes()
+    {
+        return $this->belongsToMany(Empresa::class, 'cliente_tecnico', 'user_id', 'empresa_id');
+    }
+
+    public function ticketsAsignados()
+    {
+        return $this->hasMany(Ticket::class, 'tecnico_id');
+    }
+
+    public function cronogramasAsignados()
+    {
+        return $this->hasMany(Cronograma::class, 'tecnico_id');
+    }
+
     /**
      * Send the password reset notification.
      *

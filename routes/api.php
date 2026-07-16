@@ -11,6 +11,10 @@ use App\Http\Controllers\EquipoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\EmpresaDataController;
+use App\Http\Controllers\TicketController;
+use App\Http\Controllers\CronogramaController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HojaVidaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,6 +61,10 @@ Route::group([
         // Registro de usuarios - solo Super-Admin
         Route::middleware('role:Super-Admin')->post('/register', [AuthController::class, 'register'])->name('register');
 
+        // Dashboard
+        Route::get('dashboard/admin', [DashboardController::class, 'admin'])->middleware('permission:Ver Dashboard');
+        Route::get('dashboard/cliente', [DashboardController::class, 'cliente'])->middleware('permission:Ver Dashboard');
+
         // Usuarios
         Route::apiResource('users', UserController::class);
         Route::get('users/empresa/{empresaId}', [UserController::class, 'usuariosPorEmpresa']);
@@ -80,12 +88,43 @@ Route::group([
         Route::patch('reportes/{reporte}/firma-tecnico', [ReporteController::class, 'updateFirmaTecnico'])->name('reportes.firma-tecnico');
         Route::patch('reportes/{reporte}/firma-cliente', [ReporteController::class, 'updateFirmaCliente'])->name('reportes.firma-cliente');
 
+        // Tickets
+        Route::apiResource('tickets', TicketController::class);
+        Route::get('tickets/empresa/{empresaId}', [TicketController::class, 'ticketsPorEmpresa']);
+        Route::get('tickets/tecnico/{userId}', [TicketController::class, 'ticketsPorTecnico']);
+        Route::patch('tickets/{id}/estado', [TicketController::class, 'cambiarEstado']);
+
+        // Cronogramas
+        Route::get('cronogramas/calendario', [CronogramaController::class, 'calendario']);
+        Route::post('cronogramas/generar', [CronogramaController::class, 'generar']);
+        Route::apiResource('cronogramas', CronogramaController::class);
+        Route::get('cronogramas/empresa/{empresaId}', [CronogramaController::class, 'cronogramasPorEmpresa']);
+        Route::get('cronogramas/equipo/{equipoId}', [CronogramaController::class, 'cronogramasPorEquipo']);
+        Route::get('cronogramas/tecnico/{userId}', [CronogramaController::class, 'cronogramasPorTecnico']);
+
+        // Hoja de Vida
+        Route::get('equipos/{id}/hoja-vida', [EquipoController::class, 'hojaVida']);
+        Route::get('equipos/{equipoId}/hoja-vida-detalle', [HojaVidaController::class, 'show']);
+        Route::put('equipos/{equipoId}/hoja-vida', [HojaVidaController::class, 'update']);
+        Route::post('equipos/{equipoId}/hoja-vida/firma', [HojaVidaController::class, 'guardarFirma']);
+        Route::post('equipos/{equipoId}/hoja-vida/imagen', [HojaVidaController::class, 'uploadImagen']);
+        Route::get('unidades-tecnicas', [HojaVidaController::class, 'unidadesTecnicas']);
+
+        // Técnicos / Operadores
+        Route::get('clientes/{clienteId}/tecnicos', [ClienteController::class, 'tecnicos']);
+        Route::post('clientes/{clienteId}/tecnicos', [ClienteController::class, 'asignarTecnico']);
+        Route::delete('clientes/{clienteId}/tecnicos/{userId}', [ClienteController::class, 'removerTecnico']);
+        Route::get('lista/tecnicos', [App\Http\Controllers\ListaController::class, 'listarTecnicos']);
+        Route::get('lista/clasificaciones-biomedicas', [App\Http\Controllers\ListaController::class, 'listarClasificacionesBiomedicas']);
+        Route::get('lista/empresas', [App\Http\Controllers\ListaController::class, 'listarEmpresas']);
+
         // Listas
         Route::get('lista/departamentos', [App\Http\Controllers\ListaController::class, 'listarDepartamentos']);
         Route::get('lista/municipios/{departamento}', [App\Http\Controllers\ListaController::class, 'listarMunicipios']);
         Route::get('lista/clientes', [App\Http\Controllers\ListaController::class, 'listarClientes']);
         Route::get('lista/sedes/{cliente}', [App\Http\Controllers\ListaController::class, 'listarSedes']);
         Route::get('lista/accesorios', [App\Http\Controllers\ListaController::class, 'listarAccesorios']);
+        Route::get('lista/consumibles', [App\Http\Controllers\ListaController::class, 'listarConsumibles']);
         Route::get('lista/tipos-equipos', [App\Http\Controllers\ListaController::class, 'listarTiposEquipos']);
         Route::get('lista/roles', [App\Http\Controllers\ListaController::class, 'listarRoles']);
         Route::get('lista/permisos', [App\Http\Controllers\ListaController::class, 'listarPermisos']);
@@ -96,4 +135,7 @@ Route::group([
         Route::get('mi-empresa/equipos', [App\Http\Controllers\EmpresaDataController::class, 'equiposEmpresa']);
         Route::get('mi-empresa/info', [App\Http\Controllers\EmpresaDataController::class, 'infoEmpresa']);
     });
+    
+    // Ruta pública de impresión (requiere token por query param)
+    Route::get('equipos/{equipoId}/hoja-vida/print', [HojaVidaController::class, 'print']);
 });

@@ -20,6 +20,10 @@ use App\Http\Resources\TipoEquipoListResource;
 use App\Http\Resources\RoleListResource;
 use App\Http\Resources\PermissionResource;
 use App\Models\Empresa;
+use App\Models\User;
+use App\Models\ClasificacionBiomedica;
+use App\Models\Consumible;
+use App\Http\Resources\UserResource;
 
 class ListaController extends Controller
 {
@@ -30,9 +34,12 @@ class ListaController extends Controller
         $this->middleware('can:Listar Clientes')->only('listarClientes');
         $this->middleware('can:Listar Sedes')->only('listarSedes');
         $this->middleware('can:Listar Accesorios')->only('listarAccesorios');
+        $this->middleware('can:Listar Accesorios')->only('listarConsumibles');
         $this->middleware('can:Listar Tipos Equipos')->only('listarTiposEquipos');
         $this->middleware('can:Listar Roles')->only('listarRoles');
         $this->middleware('can:Listar Permisos')->only('listarPermisos');
+        $this->middleware('can:Ver Técnicos')->only('listarTecnicos');
+        $this->middleware('can:Listar Empresas')->only('listarEmpresas');
     }
 
     /**
@@ -106,5 +113,53 @@ class ListaController extends Controller
     {
         $permisos = Permission::orderBy('id')->get();
         return PermissionResource::collection($permisos);
+    }
+
+    /**
+     * Lista Técnicos (usuarios con rol Operador) + admins de la empresa principal
+     */
+    public function listarTecnicos()
+    {
+        $operadores = User::role('Operador')->with('sede.empresa')->get();
+
+        $principalEmpresaId = Empresa::where('tipo', 'principal')->value('id');
+
+        $adminsPrincipal = collect();
+        if ($principalEmpresaId) {
+            $adminsPrincipal = User::role(['Administrador', 'Super-Admin'])
+                ->whereHas('sede', function ($q) use ($principalEmpresaId) {
+                    $q->where('empresa_id', $principalEmpresaId);
+                })
+                ->with('sede.empresa')
+                ->get();
+        }
+
+        $tecnicos = $operadores->merge($adminsPrincipal)->unique('id')->values();
+
+        return UserResource::collection($tecnicos);
+    }
+
+    /**
+     * Lista Clasificaciones Biomédicas
+     */
+    public function listarClasificacionesBiomedicas()
+    {
+        return ClasificacionBiomedica::all();
+    }
+
+    /**
+     * Lista Consumibles
+     */
+    public function listarConsumibles()
+    {
+        return Consumible::orderBy('nombre')->get();
+    }
+
+    /**
+     * Lista Empresas (clientes + principal + proveedor)
+     */
+    public function listarEmpresas()
+    {
+        return Empresa::all(['id', 'nombre', 'tipo']);
     }
 }

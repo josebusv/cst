@@ -9,9 +9,13 @@ APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://api.cst-colombia.com.co
 APP_FRONTEND_URL=https://cst-colombia.com.co
-LOG_LEVEL=error
-LOG_CHANNEL=daily
+LOG_LEVEL=warning
+LOG_CHANNEL=errors
 LOG_DAILY_DAYS=20
+
+# Observabilidad (opcional): alertas de error por Slack
+LOG_SLACK_WEBHOOK_URL=
+LOG_SLACK_LEVEL=critical
 
 # Hosting compartido (sin Redis)
 CACHE_DRIVER=file
@@ -57,6 +61,7 @@ O usar el script existente: `bash deploy.sh <usuario@host> <ruta_public_html>`.
 - El front carga y autentica; `assets/fonts/*.woff2` responden 200.
 - Export a PDF de una hoja de vida larga (varias páginas legibles).
 - `?url=/storage/../../../.env` en `imagen-proxy` responde 404.
+- Todas las respuestas traen el header `X-Request-Id` (usar para correlacionar logs).
 
 ## 5. Rollback
 

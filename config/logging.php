@@ -58,6 +58,17 @@ return [
             'ignore_exceptions' => false,
         ],
 
+        // Diario + Slack (solo si hay webhook configurado). Usar LOG_CHANNEL=errors
+        // para centralizar los errores además de guardarlos en disco.
+        'errors' => [
+            'driver' => 'stack',
+            'channels' => array_values(array_filter([
+                'daily',
+                env('LOG_SLACK_WEBHOOK_URL') ? 'slack' : null,
+            ])),
+            'ignore_exceptions' => false,
+        ],
+
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
@@ -78,7 +89,7 @@ return [
             'url' => env('LOG_SLACK_WEBHOOK_URL'),
             'username' => 'Laravel Log',
             'emoji' => ':boom:',
-            'level' => env('LOG_LEVEL', 'critical'),
+            'level' => env('LOG_SLACK_LEVEL', 'critical'),
             'replace_placeholders' => true,
         ],
 

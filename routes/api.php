@@ -15,6 +15,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\CronogramaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HojaVidaController;
+use App\Http\Controllers\ClientLogController;
 use App\Http\Controllers\ImportController;
 
 /*
@@ -55,6 +56,9 @@ Route::group([
         Route::post('/refresh', [AuthController::class, 'refresh'])->name('refresh');
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
         Route::post('/me', [AuthController::class, 'me'])->name('me');
+
+        // Reporte de errores del frontend (observabilidad)
+        Route::post('/logs/client', [ClientLogController::class, 'store'])->middleware('throttle:30,1');
     });
 
     // Rutas protegidas por permisos específicos

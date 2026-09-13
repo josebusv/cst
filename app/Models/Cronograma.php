@@ -18,6 +18,7 @@ class Cronograma extends Model
         'reporte_id',
         'estado',
         'periodicidad',
+        'tipo',
         'fecha_programada',
         'fecha_ejecucion',
         'tecnico_id',

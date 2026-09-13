@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cronograma;
 use App\Models\Equipo;
+use App\Models\Empresa;
 use App\Http\Resources\CronogramaResource;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -12,7 +13,7 @@ class CronogramaController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('can:Ver Cronogramas')->only(['index', 'show', 'cronogramasPorEmpresa', 'cronogramasPorEquipo', 'cronogramasPorTecnico', 'calendario']);
+        $this->middleware('can:Ver Cronogramas')->only(['index', 'show', 'cronogramasPorEmpresa', 'cronogramasPorEquipo', 'cronogramasPorTecnico', 'calendario', 'anual']);
         $this->middleware('can:Crear Cronogramas')->only('store');
         $this->middleware('can:Editar Cronogramas')->only('update');
         $this->middleware('can:Eliminar Cronogramas')->only('destroy');
@@ -35,6 +36,7 @@ class CronogramaController extends Controller
             'reporte_id' => 'nullable|exists:reportes,id',
             'estado' => 'nullable|in:pendiente,completado,vencido',
             'periodicidad' => 'nullable|in:mensual,bimestral,trimestral,semestral,anual',
+            'tipo' => 'nullable|in:mantenimiento,metrologia',
             'fecha_programada' => 'nullable|date',
             'fecha_ejecucion' => 'nullable|date',
             'tecnico_id' => 'nullable|exists:users,id',
@@ -66,6 +68,7 @@ class CronogramaController extends Controller
             'reporte_id' => 'nullable|exists:reportes,id',
             'estado' => 'sometimes|in:pendiente,completado,vencido',
             'periodicidad' => 'nullable|in:mensual,bimestral,trimestral,semestral,anual',
+            'tipo' => 'sometimes|in:mantenimiento,metrologia',
             'fecha_programada' => 'nullable|date',
             'fecha_ejecucion' => 'nullable|date',
             'tecnico_id' => 'nullable|exists:users,id',
@@ -141,6 +144,71 @@ class CronogramaController extends Controller
         }
 
         return CronogramaResource::collection($query->get());
+    }
+
+    /**
+     * Cronograma anual por empresa: equipos con el estado de cada mes
+     * (mantenimiento y metrología) para el reporte/PDF.
+     */
+    public function anual($empresaId, Request $request)
+    {
+        $request->validate(['year' => 'required|string|size:4']);
+
+        $empresa = Empresa::findOrFail($empresaId);
+
+        $equipos = Equipo::whereHas('sede', function ($query) use ($empresaId) {
+            $query->where('empresa_id', $empresaId);
+        })
+            ->with(['sede.departamento', 'sede.municipio', 'clasificacionBiomedica'])
+            ->orderBy('equipo')
+            ->get();
+
+        $cronogramas = Cronograma::where('year', $request->year)
+            ->whereHas('equipo.sede', function ($query) use ($empresaId) {
+                $query->where('empresa_id', $empresaId);
+            })
+            ->get()
+            ->groupBy('equipo_id');
+
+        return response()->json([
+            'data' => [
+                'empresa' => ['id' => $empresa->id, 'nombre' => $empresa->nombre],
+                'year' => $request->year,
+                'equipos' => $equipos->map(function ($equipo) use ($cronogramas) {
+                    return [
+                        'id' => $equipo->id,
+                        'equipo' => $equipo->equipo,
+                        'marca' => $equipo->marca,
+                        'modelo' => $equipo->modelo,
+                        'serie' => $equipo->serie,
+                        'clasificacion_biomedica' => $equipo->clasificacionBiomedica?->nombre,
+                        'ubicacion' => $this->ubicacionEquipo($equipo),
+                        'cronogramas' => $cronogramas->get($equipo->id, collect())
+                            ->map(fn ($c) => [
+                                'month' => $c->month,
+                                'estado' => $c->estado,
+                                'tipo' => $c->tipo ?? 'mantenimiento',
+                                'periodicidad' => $c->periodicidad,
+                            ])->values(),
+                    ];
+                })->values(),
+            ],
+        ]);
+    }
+
+    private function ubicacionEquipo(Equipo $equipo): ?string
+    {
+        $sede = $equipo->sede;
+        if (!$sede) {
+            return $equipo->ubicacion ?: null;
+        }
+
+        $partes = array_filter([$sede->municipio?->nombre, $sede->departamento?->nombre]);
+        if ($partes) {
+            return implode(' ', $partes);
+        }
+
+        return $sede->nombre ?: ($equipo->ubicacion ?: null);
     }
 
     public function generar(Request $request)

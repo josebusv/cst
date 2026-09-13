@@ -103,8 +103,9 @@ Route::group([
         Route::patch('tickets/{id}/estado', [TicketController::class, 'cambiarEstado']);
 
         // Cronogramas
-        Route::get('cronogramas/calendario', [CronogramaController::class, 'calendario']);
-        Route::post('cronogramas/generar', [CronogramaController::class, 'generar']);
+Route::get('cronogramas/calendario', [CronogramaController::class, 'calendario']);
+Route::get('cronogramas/empresa/{empresaId}/anual', [CronogramaController::class, 'anual']);
+Route::post('cronogramas/generar', [CronogramaController::class, 'generar']);
         Route::apiResource('cronogramas', CronogramaController::class);
         Route::get('cronogramas/empresa/{empresaId}', [CronogramaController::class, 'cronogramasPorEmpresa']);
         Route::get('cronogramas/equipo/{equipoId}', [CronogramaController::class, 'cronogramasPorEquipo']);

@@ -22,6 +22,7 @@ class CronogramaResource extends JsonResource
             'reporte' => new ReporteResource($this->whenLoaded('reporte')),
             'estado' => $this->estado,
             'periodicidad' => $this->periodicidad,
+            'tipo' => $this->tipo,
             'fecha_programada' => $this->fecha_programada,
             'fecha_ejecucion' => $this->fecha_ejecucion,
             'tecnico_id' => $this->tecnico_id,

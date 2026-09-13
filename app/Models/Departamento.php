@@ -9,6 +9,8 @@ class Departamento extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['nombre', 'codigo'];
+
     public function municipios()
     {
         return $this->hasMany(Municipio::class);

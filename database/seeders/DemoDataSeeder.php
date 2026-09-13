@@ -108,6 +108,7 @@ class DemoDataSeeder extends Seeder
                 'equipo' => 'Ecógrafo Demo',
                 'marca' => 'Philips',
                 'modelo' => 'EPIQ 7',
+                'servicio' => 'Diagnóstico por imagen',
                 'fabricante' => 'Philips Healthcare',
                 'registro_invima' => '2023MED-DEMO',
                 'pais_origen' => 'Estados Unidos',

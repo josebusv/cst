@@ -20,6 +20,7 @@ class SedeResource extends JsonResource
             'direccion' => $this->direccion,
             'telefono' => $this->telefono,
             'email' => $this->email,
+            'empresa_id' => $this->empresa_id,
             'tipo_sede' => $this->principal ? 'Principal' : 'Secundaria',
             'departamento' => $this->whenLoaded('departamento', function () {
                 return [

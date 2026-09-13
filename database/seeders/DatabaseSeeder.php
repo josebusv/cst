@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             PermissionsDemoSeeder::class,
             UnidadesTecnicasSeeder::class,
             ConsumiblesSeeder::class,
+            ClasificacionBiomedicaSeeder::class,
             DemoDataSeeder::class,
         ]);
     }

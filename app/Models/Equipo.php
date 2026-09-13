@@ -26,6 +26,7 @@ class Equipo extends Model
         'imagen',
         'tipo_equipo_id',
         'clasificacion_biomedica_id',
+        'tipo_hoja',
         'estado',
         'fecha_adquisicion',
         'fecha_instalacion',

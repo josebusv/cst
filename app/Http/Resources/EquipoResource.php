@@ -30,6 +30,7 @@ class EquipoResource extends JsonResource
             'code_ecri' => $this->code_ecri,
             'imagen' => $this->imagen ? asset('storage/' . $this->imagen) : null,
             'estado' => $this->estado,
+            'tipo_hoja' => $this->tipo_hoja,
             'fecha_adquisicion' => $this->fecha_adquisicion?->format('Y-m-d'),
             'fecha_instalacion' => $this->fecha_instalacion?->format('Y-m-d'),
             'garantia_meses' => $this->garantia_meses,

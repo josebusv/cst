@@ -27,6 +27,7 @@ class PermissionsDemoSeeder extends Seeder
             'Ver Técnicos', 'Asignar Operadores',
             'Listar Empresas',
             'Ver Dashboard',
+            'Importar',
         ];
 
         foreach ($permissions as $perm) {

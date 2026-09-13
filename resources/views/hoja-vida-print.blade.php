@@ -111,10 +111,12 @@
   </div>
   <div class="grid-col">
     <div class="sub-head">Accesorios</div>
-    @foreach($equipo->accesorios ?? [] as $i => $a)
-    <div class="row-item"><span>{{ $i+1 }}. {{ $a->nombre }}</span></div>
+    @foreach($hojaVida->accesorios ?? [] as $i => $a)
+    @if(!empty($a))
+    <div class="row-item"><span>{{ $i+1 }}. {{ $a }}</span></div>
+    @endif
     @endforeach
-    @if(empty($equipo->accesorios) || count($equipo->accesorios) === 0)
+    @if(empty($hojaVida->accesorios) || count(array_filter($hojaVida->accesorios ?? [])) === 0)
     <div class="row-item" style="color:#9ca3af;">Sin accesorios</div>
     @endif
   </div>

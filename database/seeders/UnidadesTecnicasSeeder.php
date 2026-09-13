@@ -22,11 +22,13 @@ class UnidadesTecnicasSeeder extends Seeder
             ['categoria' => 'presion', 'nombre' => 'PSI', 'simbolo' => 'PSI'],
             ['categoria' => 'presion', 'nombre' => 'Bar', 'simbolo' => 'bar'],
             ['categoria' => 'presion', 'nombre' => 'kPa', 'simbolo' => 'kPa'],
+            ['categoria' => 'presion', 'nombre' => 'mmHg', 'simbolo' => 'mmHg'],
             ['categoria' => 'velocidad', 'nombre' => 'RPM', 'simbolo' => 'RPM'],
             ['categoria' => 'velocidad', 'nombre' => 'Hz', 'simbolo' => 'Hz'],
             ['categoria' => 'capacidad', 'nombre' => 'L', 'simbolo' => 'L'],
             ['categoria' => 'capacidad', 'nombre' => 'mL', 'simbolo' => 'mL'],
             ['categoria' => 'capacidad', 'nombre' => 'm³', 'simbolo' => 'm³'],
+            ['categoria' => 'capacidad', 'nombre' => 'cc', 'simbolo' => 'cc'],
             ['categoria' => 'peso', 'nombre' => 'Kg', 'simbolo' => 'kg'],
             ['categoria' => 'peso', 'nombre' => 'g', 'simbolo' => 'g'],
             ['categoria' => 'peso', 'nombre' => 'lb', 'simbolo' => 'lb'],
@@ -36,6 +38,13 @@ class UnidadesTecnicasSeeder extends Seeder
             ['categoria' => 'dimensiones', 'nombre' => 'mm', 'simbolo' => 'mm'],
             ['categoria' => 'dimensiones', 'nombre' => 'cm', 'simbolo' => 'cm'],
             ['categoria' => 'dimensiones', 'nombre' => 'm', 'simbolo' => 'm'],
+            ['categoria' => 'dimensiones', 'nombre' => 'In', 'simbolo' => 'In'],
+            ['categoria' => 'angulo', 'nombre' => 'Grados (°)', 'simbolo' => '°'],
+            ['categoria' => 'longitud', 'nombre' => 'mm', 'simbolo' => 'mm'],
+            ['categoria' => 'longitud', 'nombre' => 'cm', 'simbolo' => 'cm'],
+            ['categoria' => 'longitud', 'nombre' => 'm', 'simbolo' => 'm'],
+            ['categoria' => 'flujo', 'nombre' => 'cm²/s', 'simbolo' => 'cm²/s'],
+            ['categoria' => 'flujo', 'nombre' => 'L/min', 'simbolo' => 'L/min'],
         ];
 
         foreach ($unidades as $u) {

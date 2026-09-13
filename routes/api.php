@@ -15,6 +15,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\CronogramaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HojaVidaController;
+use App\Http\Controllers\ImportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -64,6 +65,9 @@ Route::group([
         // Dashboard
         Route::get('dashboard/admin', [DashboardController::class, 'admin'])->middleware('permission:Ver Dashboard');
         Route::get('dashboard/cliente', [DashboardController::class, 'cliente'])->middleware('permission:Ver Dashboard');
+
+        // Importación masiva
+        Route::post('importar', [ImportController::class, 'importar']);
 
         // Usuarios
         Route::apiResource('users', UserController::class);
@@ -139,3 +143,6 @@ Route::group([
     // Ruta pública de impresión (requiere token por query param)
     Route::get('equipos/{equipoId}/hoja-vida/print', [HojaVidaController::class, 'print']);
 });
+
+// Proxy de imágenes (público, con CORS)
+Route::get('imagen-proxy', [HojaVidaController::class, 'proxyImagen']);

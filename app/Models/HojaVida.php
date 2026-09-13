@@ -19,6 +19,7 @@ class HojaVida extends Model
         'especificaciones_tecnicas',
         'fuentes_alimentacion',
         'sistemas_consulta',
+        'accesorios',
         'uso',
         'tipo_dispositivo',
         'clase_riesgo',
@@ -36,6 +37,7 @@ class HojaVida extends Model
         'especificaciones_tecnicas' => 'array',
         'fuentes_alimentacion' => 'array',
         'sistemas_consulta' => 'array',
+        'accesorios' => 'array',
     ];
 
     public function equipo()

@@ -141,3 +141,17 @@ npm run build:staging      # usa environment.staging.ts -> https://apitest.cst-c
 - En Network, las llamadas van a https://apitest.cst-colombia.com.co/api/...
 - Respuesta CORS con Access-Control-Allow-Origin: https://test.cst-colombia.com.co
 - Si aparece mixed content o url() en http, configurar TrustProxies ($proxies = '*') por el proxy de Hostinger.
+
+## 9. Document root y seguridad (IMPORTANTE)
+
+La raiz web de Laravel debe ser la carpeta **public/**, nunca la raiz del proyecto.
+Si pegas todo el proyecto dentro de public_html, quedan expuestos por HTTP:
+`/artisan`, `/composer.json`, `/composer.lock`, `/config/*`, `/vendor/*`, etc.
+
+### Correcto
+Document Root del (sub)dominio -> `.../cst/public`
+
+### Si no puedes cambiar el Document Root
+Sube el archivo `.htaccess` de la raiz del proyecto (incluido en este repo) y
+verifica que redirige todo a `public/`. Comprueba con:
+`curl.exe -s -o NUL -w "%{http_code}" https://tu-api/artisan`  -> debe dar 404

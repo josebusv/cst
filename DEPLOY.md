@@ -103,3 +103,41 @@ Con `LOG_CHANNEL=errors` los errores se guardan en disco y, ademas, se envian al
 
 > Diagnostico y pruebas de logs/alertas con tinker: ver `docs/OBSERVABILIDAD.md`.
 
+
+## 8. Preproduccion (test / apitest)
+
+Dominios:
+- Front: https://test.cst-colombia.com.co
+- API:   https://apitest.cst-colombia.com.co
+
+### Backend (.env en el servidor)
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://apitest.cst-colombia.com.co
+APP_FRONTEND_URL=https://test.cst-colombia.com.co
+LOG_CHANNEL=errors
+LOG_LEVEL=warning
+LOG_DAILY_DAYS=20
+CACHE_DRIVER=file
+SESSION_DRIVER=file
+QUEUE_CONNECTION=sync
+
+Luego:
+php artisan migrate --force
+php artisan storage:link
+php artisan optimize
+
+CORS ya permite https://test.cst-colombia.com.co (config/cors.php) y el proxy de imagenes
+deriva su host permitido de APP_URL (config/imagen_proxy.php).
+
+### Frontend
+npm ci
+npm run build:staging      # usa environment.staging.ts -> https://apitest.cst-colombia.com.co/api/auth/
+# Subir dist/coreui-free-angular-admin-template/browser/ al public_html de test.cst-colombia.com.co
+# (o: bash deploy.sh <usuario@host> <ruta_public_html>)
+
+### Verificacion
+- Login en https://test... responde y guarda el token.
+- En Network, las llamadas van a https://apitest.cst-colombia.com.co/api/...
+- Respuesta CORS con Access-Control-Allow-Origin: https://test.cst-colombia.com.co
+- Si aparece mixed content o url() en http, configurar TrustProxies ($proxies = '*') por el proxy de Hostinger.

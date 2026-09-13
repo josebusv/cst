@@ -30,9 +30,10 @@ class DashboardController extends Controller
             ->groupBy('estado')
             ->pluck('cantidad', 'estado');
 
-        $reportesMes = Reporte::whereMonth('created_at', Carbon::now()->month)
-            ->whereYear('created_at', Carbon::now()->year)
-            ->count();
+        $inicioMes = Carbon::now()->startOfMonth();
+        $finMes = Carbon::now()->endOfMonth();
+
+        $reportesMes = Reporte::whereBetween('created_at', [$inicioMes, $finMes])->count();
 
         $mantenimientosPendientes = Cronograma::where('estado', 'pendiente')->count();
 
@@ -103,11 +104,13 @@ class DashboardController extends Controller
             ->groupBy('estado')
             ->pluck('cantidad', 'estado');
 
+        $inicioMes = Carbon::now()->startOfMonth();
+        $finMes = Carbon::now()->endOfMonth();
+
         $reportesMes = Reporte::whereHas('equipo.sede', function ($q) use ($empresaId) {
             $q->where('empresa_id', $empresaId);
         })
-            ->whereMonth('created_at', Carbon::now()->month)
-            ->whereYear('created_at', Carbon::now()->year)
+            ->whereBetween('created_at', [$inicioMes, $finMes])
             ->count();
 
         $mantenimientosPendientes = Cronograma::whereHas('equipo.sede', function ($q) use ($empresaId) {

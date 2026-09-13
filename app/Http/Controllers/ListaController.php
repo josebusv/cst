@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Departamento;
 use App\Models\Municipio;
 use App\Models\Cliente;
@@ -27,6 +28,16 @@ use App\Http\Resources\UserResource;
 
 class ListaController extends Controller
 {
+    /**
+     * Catálogos estables (cambian poco): 6 horas.
+     */
+    private const TTL_CATALOG = 21600;
+
+    /**
+     * Datos operativos (cambian con frecuencia): 5 minutos.
+     */
+    private const TTL_OPERATIVO = 300;
+
     public function __construct()
     {
         $this->middleware('can:Listar Departamentos')->only('listarDepartamentos');
@@ -47,7 +58,12 @@ class ListaController extends Controller
      */
     public function listarDepartamentos()
     {
-        $departamentos = Departamento::all();
+        $departamentos = Cache::remember(
+            'lista.departamentos',
+            self::TTL_CATALOG,
+            fn () => Departamento::all()
+        );
+
         return DepartamentoListResource::collection($departamentos);
     }
 
@@ -56,7 +72,12 @@ class ListaController extends Controller
      */
     public function listarMunicipios(Departamento $departamento)
     {
-        $municipios = $departamento->municipios;
+        $municipios = Cache::remember(
+            'lista.municipios.' . $departamento->id,
+            self::TTL_CATALOG,
+            fn () => $departamento->municipios
+        );
+
         return MunicipioListResource::collection($municipios);
     }
 
@@ -65,7 +86,12 @@ class ListaController extends Controller
      */
     public function listarClientes()
     {
-        $clientes = Cliente::all();
+        $clientes = Cache::remember(
+            'lista.clientes',
+            self::TTL_OPERATIVO,
+            fn () => Cliente::orderBy('nombre')->get()
+        );
+
         return ClienteListResource::collection($clientes);
     }
 
@@ -75,7 +101,13 @@ class ListaController extends Controller
     public function listarSedes($empresa)
     {
         $empresa = Empresa::findOrFail($empresa);
-        $sedes = $empresa->sedes;
+
+        $sedes = Cache::remember(
+            'lista.sedes.' . $empresa->id,
+            self::TTL_OPERATIVO,
+            fn () => $empresa->sedes
+        );
+
         return SedeListResource::collection($sedes);
     }
 
@@ -84,7 +116,12 @@ class ListaController extends Controller
      */
     public function listarAccesorios()
     {
-        $accesorios = Accesorio::all();
+        $accesorios = Cache::remember(
+            'lista.accesorios',
+            self::TTL_CATALOG,
+            fn () => Accesorio::all()
+        );
+
         return AccesorioListResource::collection($accesorios);
     }
 
@@ -93,7 +130,12 @@ class ListaController extends Controller
      */
     public function listarTiposEquipos()
     {
-        $tiposEquipos = TipoEquipo::all();
+        $tiposEquipos = Cache::remember(
+            'lista.tipos_equipos',
+            self::TTL_CATALOG,
+            fn () => TipoEquipo::all()
+        );
+
         return TipoEquipoListResource::collection($tiposEquipos);
     }
 
@@ -102,7 +144,12 @@ class ListaController extends Controller
      */
     public function listarRoles()
     {
-        $roles = Role::all();
+        $roles = Cache::remember(
+            'lista.roles',
+            self::TTL_CATALOG,
+            fn () => Role::all()
+        );
+
         return RoleListResource::collection($roles);
     }
 
@@ -111,7 +158,12 @@ class ListaController extends Controller
      */
     public function listarPermisos()
     {
-        $permisos = Permission::orderBy('id')->get();
+        $permisos = Cache::remember(
+            'lista.permisos',
+            self::TTL_CATALOG,
+            fn () => Permission::orderBy('id')->get()
+        );
+
         return PermissionResource::collection($permisos);
     }
 
@@ -120,21 +172,27 @@ class ListaController extends Controller
      */
     public function listarTecnicos()
     {
-        $operadores = User::role('Operador')->with('sede.empresa')->get();
+        $tecnicos = Cache::remember(
+            'lista.tecnicos',
+            60,
+            function () {
+                $operadores = User::role('Operador')->with('sede.empresa')->get();
 
-        $principalEmpresaId = Empresa::where('tipo', 'principal')->value('id');
+                $principalEmpresaId = Empresa::where('tipo', 'principal')->value('id');
 
-        $adminsPrincipal = collect();
-        if ($principalEmpresaId) {
-            $adminsPrincipal = User::role(['Administrador', 'Super-Admin'])
-                ->whereHas('sede', function ($q) use ($principalEmpresaId) {
-                    $q->where('empresa_id', $principalEmpresaId);
-                })
-                ->with('sede.empresa')
-                ->get();
-        }
+                $adminsPrincipal = collect();
+                if ($principalEmpresaId) {
+                    $adminsPrincipal = User::role(['Administrador', 'Super-Admin'])
+                        ->whereHas('sede', function ($q) use ($principalEmpresaId) {
+                            $q->where('empresa_id', $principalEmpresaId);
+                        })
+                        ->with('sede.empresa')
+                        ->get();
+                }
 
-        $tecnicos = $operadores->merge($adminsPrincipal)->unique('id')->values();
+                return $operadores->merge($adminsPrincipal)->unique('id')->values();
+            }
+        );
 
         return UserResource::collection($tecnicos);
     }
@@ -144,7 +202,11 @@ class ListaController extends Controller
      */
     public function listarClasificacionesBiomedicas()
     {
-        return ClasificacionBiomedica::all();
+        return Cache::remember(
+            'lista.clasificaciones_biomedicas',
+            self::TTL_CATALOG,
+            fn () => ClasificacionBiomedica::all()
+        );
     }
 
     /**
@@ -152,7 +214,11 @@ class ListaController extends Controller
      */
     public function listarConsumibles()
     {
-        return Consumible::orderBy('nombre')->get();
+        return Cache::remember(
+            'lista.consumibles',
+            self::TTL_CATALOG,
+            fn () => Consumible::orderBy('nombre')->get()
+        );
     }
 
     /**
@@ -160,6 +226,10 @@ class ListaController extends Controller
      */
     public function listarEmpresas()
     {
-        return Empresa::all(['id', 'nombre', 'tipo']);
+        return Cache::remember(
+            'lista.empresas',
+            self::TTL_OPERATIVO,
+            fn () => Empresa::all(['id', 'nombre', 'tipo'])
+        );
     }
 }

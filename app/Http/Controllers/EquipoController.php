@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use App\Http\Requests\UpdateEquipoRequest;
 use App\Http\Requests\StoreEquipoRequest;
 use App\Models\Equipo;
@@ -147,16 +148,18 @@ class EquipoController extends Controller
 
     private function unidadesTecnicasAgrupadas()
     {
-        return UnidadTecnica::where('activo', true)
-            ->orderBy('categoria')
-            ->orderBy('nombre')
-            ->get()
-            ->groupBy('categoria')
-            ->map(fn ($items) => $items->map(fn ($u) => [
-                'id' => $u->id,
-                'nombre' => $u->nombre,
-                'simbolo' => $u->simbolo,
-            ])->values())
-            ->toArray();
+        return Cache::remember('unidades_tecnicas.agrupadas', 21600, function () {
+            return UnidadTecnica::where('activo', true)
+                ->orderBy('categoria')
+                ->orderBy('nombre')
+                ->get()
+                ->groupBy('categoria')
+                ->map(fn ($items) => $items->map(fn ($u) => [
+                    'id' => $u->id,
+                    'nombre' => $u->nombre,
+                    'simbolo' => $u->simbolo,
+                ])->values())
+                ->toArray();
+        });
     }
 }

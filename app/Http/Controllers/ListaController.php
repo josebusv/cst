@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
+use App\Support\CatalogoCache;
 use App\Models\Departamento;
 use App\Models\Municipio;
 use App\Models\Cliente;
@@ -58,7 +58,7 @@ class ListaController extends Controller
      */
     public function listarDepartamentos()
     {
-        $departamentos = Cache::remember(
+        $departamentos = CatalogoCache::remember(
             'lista.departamentos',
             self::TTL_CATALOG,
             fn () => Departamento::all()
@@ -72,7 +72,7 @@ class ListaController extends Controller
      */
     public function listarMunicipios(Departamento $departamento)
     {
-        $municipios = Cache::remember(
+        $municipios = CatalogoCache::remember(
             'lista.municipios.' . $departamento->id,
             self::TTL_CATALOG,
             fn () => $departamento->municipios
@@ -86,7 +86,7 @@ class ListaController extends Controller
      */
     public function listarClientes()
     {
-        $clientes = Cache::remember(
+        $clientes = CatalogoCache::remember(
             'lista.clientes',
             self::TTL_OPERATIVO,
             fn () => Cliente::orderBy('nombre')->get()
@@ -102,7 +102,7 @@ class ListaController extends Controller
     {
         $empresa = Empresa::findOrFail($empresa);
 
-        $sedes = Cache::remember(
+        $sedes = CatalogoCache::remember(
             'lista.sedes.' . $empresa->id,
             self::TTL_OPERATIVO,
             fn () => $empresa->sedes
@@ -116,7 +116,7 @@ class ListaController extends Controller
      */
     public function listarAccesorios()
     {
-        $accesorios = Cache::remember(
+        $accesorios = CatalogoCache::remember(
             'lista.accesorios',
             self::TTL_CATALOG,
             fn () => Accesorio::all()
@@ -130,7 +130,7 @@ class ListaController extends Controller
      */
     public function listarTiposEquipos()
     {
-        $tiposEquipos = Cache::remember(
+        $tiposEquipos = CatalogoCache::remember(
             'lista.tipos_equipos',
             self::TTL_CATALOG,
             fn () => TipoEquipo::all()
@@ -144,7 +144,7 @@ class ListaController extends Controller
      */
     public function listarRoles()
     {
-        $roles = Cache::remember(
+        $roles = CatalogoCache::remember(
             'lista.roles',
             self::TTL_CATALOG,
             fn () => Role::all()
@@ -158,7 +158,7 @@ class ListaController extends Controller
      */
     public function listarPermisos()
     {
-        $permisos = Cache::remember(
+        $permisos = CatalogoCache::remember(
             'lista.permisos',
             self::TTL_CATALOG,
             fn () => Permission::orderBy('id')->get()
@@ -172,7 +172,7 @@ class ListaController extends Controller
      */
     public function listarTecnicos()
     {
-        $tecnicos = Cache::remember(
+        $tecnicos = CatalogoCache::remember(
             'lista.tecnicos',
             60,
             function () {
@@ -202,7 +202,7 @@ class ListaController extends Controller
      */
     public function listarClasificacionesBiomedicas()
     {
-        return Cache::remember(
+        return CatalogoCache::remember(
             'lista.clasificaciones_biomedicas',
             self::TTL_CATALOG,
             fn () => ClasificacionBiomedica::all()
@@ -214,7 +214,7 @@ class ListaController extends Controller
      */
     public function listarConsumibles()
     {
-        return Cache::remember(
+        return CatalogoCache::remember(
             'lista.consumibles',
             self::TTL_CATALOG,
             fn () => Consumible::orderBy('nombre')->get()
@@ -226,7 +226,7 @@ class ListaController extends Controller
      */
     public function listarEmpresas()
     {
-        return Cache::remember(
+        return CatalogoCache::remember(
             'lista.empresas',
             self::TTL_OPERATIVO,
             fn () => Empresa::all(['id', 'nombre', 'tipo'])

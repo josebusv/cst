@@ -76,9 +76,12 @@ class EquipoController extends Controller
 
     public function equiposPorEmpresa($empresaId)
     {
+        $perPage = (int) request()->query('per_page', 15);
+        $perPage = max(1, min($perPage, 100));
+
         $equipos = Equipo::whereHas('sede', function ($query) use ($empresaId) {
             $query->where('empresa_id', $empresaId);
-        })->with('sede')->paginate(15);
+        })->with('sede')->paginate($perPage);
 
         return EquipoResource::collection($equipos);
     }

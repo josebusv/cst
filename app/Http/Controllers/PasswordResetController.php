@@ -37,6 +37,7 @@ class PasswordResetController extends Controller
 
         } catch (\Exception $e) {
             // También retornar mensaje genérico en caso de error
+            report($e);
             return response()->json([
                 'message' => 'Si el email está registrado, recibirás un enlace de recuperación.',
                 'status' => 'success'
@@ -76,9 +77,10 @@ class PasswordResetController extends Controller
             ], 400);
 
         } catch (\Exception $e) {
+            report($e);
             return response()->json([
                 'message' => 'Error interno del servidor.',
-                'error' => $e->getMessage()
+                'status' => 'error'
             ], 500);
         }
     }

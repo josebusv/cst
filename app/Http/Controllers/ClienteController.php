@@ -63,9 +63,9 @@ class ClienteController extends Controller
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
+            report($e);
             return response()->json([
-                'error' => 'Error al crear el cliente',
-                'message' => $e->getMessage(),
+                'message' => 'Error al crear el cliente',
             ], 500);
         }
 

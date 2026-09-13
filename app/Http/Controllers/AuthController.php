@@ -108,7 +108,12 @@ class AuthController extends Controller
      */
     public function logout()
     {
-        auth()->logout();
+        try {
+            auth('api')->logout();
+            auth('api')->invalidate(true);
+        } catch (JWTException $e) {
+            // El token ya no es válido; igualmente se cierra sesión en el cliente.
+        }
 
         return response()->json(['message' => 'Successfully logged out']);
     }

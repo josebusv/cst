@@ -260,62 +260,94 @@ class HojaVidaController extends Controller
 
     public function proxyImagen(Request $request)
     {
-        $url = $request->query('url');
-        if (!$url) {
+        $url = (string) $request->query('url', '');
+        if ($url === '') {
             abort(400, 'URL requerida');
         }
 
-        // Si es una URL relativa tipo /storage/... o asset(), servir del disco local
-        $path = null;
-        if (str_starts_with($url, '/storage/') || str_contains($url, '/storage/')) {
-            $segments = explode('/storage/', $url);
-            $relativePath = end($segments);
-            $fullPath = storage_path('app/public/' . $relativePath);
-            if (file_exists($fullPath)) {
-                $path = $fullPath;
+        $candidate = $this->resolverRutaLocal($url);
+        if ($candidate !== null) {
+            $baseStorage = realpath(storage_path('app/public'));
+            $basePublic = realpath(public_path());
+            $real = realpath($candidate);
+
+            $dentroDeStorage = $real && $baseStorage
+                && str_starts_with($real, $baseStorage . DIRECTORY_SEPARATOR);
+            $dentroDePublic = $real && $basePublic
+                && str_starts_with($real, $basePublic . DIRECTORY_SEPARATOR);
+
+            if ($real && is_file($real) && ($dentroDeStorage || $dentroDePublic)) {
+                return $this->servirImagenLocal($real);
             }
         }
 
-        if (!$path && (str_starts_with($url, '/'))) {
-            $fullPath = public_path($url);
-            if (file_exists($fullPath)) {
-                $path = $fullPath;
+        $allowedHosts = config('imagen_proxy.allowed_hosts', []);
+        if (filter_var($url, FILTER_VALIDATE_URL)) {
+            $host = parse_url($url, PHP_URL_HOST);
+            $scheme = parse_url($url, PHP_URL_SCHEME);
+            if ($host && in_array($host, $allowedHosts, true) && in_array($scheme, ['http', 'https'], true)) {
+                return $this->proxyImagenExterna($url);
             }
         }
 
-        if ($path) {
-            $mime = mime_content_type($path) ?: 'image/jpeg';
-            $content = file_get_contents($path);
-            return response($content)
-                ->header('Content-Type', $mime)
-                ->header('Access-Control-Allow-Origin', '*')
-                ->header('Cache-Control', 'public, max-age=86400');
+        abort(404, 'Imagen no encontrada');
+    }
+
+    private function resolverRutaLocal(string $url): ?string
+    {
+        if (str_contains($url, '/storage/')) {
+            $relative = ltrim(substr($url, strpos($url, '/storage/') + strlen('/storage/')), '/');
+
+            return $relative === '' ? null : storage_path('app/public/' . $relative);
         }
 
-        // Si es URL externa, hacer proxy con curl
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            abort(400, 'URL inválida');
+        if (str_starts_with($url, '/')) {
+            return public_path(ltrim($url, '/'));
         }
 
+        return null;
+    }
+
+    private function servirImagenLocal(string $path)
+    {
+        $mime = mime_content_type($path) ?: 'application/octet-stream';
+        if (!str_starts_with($mime, 'image/')) {
+            abort(404, 'Recurso no encontrado');
+        }
+
+        return response()->file($path, [
+            'Content-Type' => $mime,
+            'Access-Control-Allow-Origin' => '*',
+            'Cache-Control' => 'public, max-age=86400',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    private function proxyImagenExterna(string $url)
+    {
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_TIMEOUT => 10,
-            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_MAXFILESIZE => 5 * 1024 * 1024,
         ]);
         $content = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $mime = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        $mime = (string) curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
         curl_close($ch);
 
-        if ($status !== 200 || !$content) {
+        if ($status !== 200 || !$content || !str_starts_with($mime, 'image/')) {
             abort(404, 'Imagen no encontrada');
         }
 
         return response($content)
-            ->header('Content-Type', $mime ?: 'image/jpeg')
+            ->header('Content-Type', $mime)
             ->header('Access-Control-Allow-Origin', '*')
-            ->header('Cache-Control', 'public, max-age=86400');
+            ->header('Cache-Control', 'public, max-age=86400')
+            ->header('X-Content-Type-Options', 'nosniff');
     }
 }

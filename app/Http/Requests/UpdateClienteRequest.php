@@ -27,7 +27,7 @@ class UpdateClienteRequest extends FormRequest
 
         return [
             'nombre' => 'sometimes|required|string|max:255',
-            'nit' => 'sometimes|required|integer|unique:empresas,nit,' . $clienteId,
+            'nit' => 'sometimes|required|string|max:20|unique:empresas,nit,' . $clienteId,
             'logo' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ];
     }

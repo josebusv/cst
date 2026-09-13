@@ -25,7 +25,7 @@ class StoreClienteRequest extends FormRequest
     {
         return [
             'nombre' => 'required|string|max:255',
-            'nit' => 'required|integer|unique:empresas,nit',
+            'nit' => 'required|string|max:20|unique:empresas,nit',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'nombresede' => 'required|string|max:255',
             'direccion' => 'required|string|max:255',

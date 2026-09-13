@@ -104,3 +104,12 @@ Crear tests unitarios para verificar que los permisos funcionan correctamente.
 2. **Alta**: Corregir permisos inexistentes en ReporteController
 3. **Media**: Refactorizar rutas API para usar permisos específicos
 4. **Baja**: Crear roles granulares adicionales
+
+## Estado tras la auditoria de seguridad
+
+- **proxy de imagenes (/api/imagen-proxy)**: publico pero restringido al almacenamiento propio (realpath + contencion) y hosts permitidos (config/imagen_proxy.php). Se elimino el SSRF por curl libre y la verificacion SSL deshabilitada.
+- **Subidas**: logo de cliente/equipo e imagen de hoja de vida validan image|mimes|max.
+- **NIT**: validacion alineada a string (VARCHAR(20)) para admitir digito de verificacion.
+- **CORS**: supports_credentials=false (se usa Bearer token, no cookies); origenes explicitos.
+- **JWT**: logout invalida/blacklistea el token.
+- **Errores**: los 500 registran con eport() y no exponen getMessage().

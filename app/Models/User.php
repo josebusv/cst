@@ -18,6 +18,11 @@ class User extends Authenticatable implements JWTSubject
     use HasFactory, Notifiable, HasRoles, softDeletes, CanResetPassword;
 
     /**
+     * Guard usado por Spatie para roles/permisos (coincide con auth:api).
+     */
+    protected $guard_name = 'api';
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>

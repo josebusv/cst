@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             PermissionsDemoSeeder::class,
             UnidadesTecnicasSeeder::class,
             ConsumiblesSeeder::class,
+            DemoDataSeeder::class,
         ]);
     }
 }

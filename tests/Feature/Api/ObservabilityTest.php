@@ -6,6 +6,8 @@ use App\Models\Empresa;
 use App\Models\Sede;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -47,6 +49,31 @@ class ObservabilityTest extends TestCase
             ])
             ->assertStatus(200)
             ->assertJson(['ok' => true]);
+    }
+
+    public function test_el_canal_webhook_envia_la_alerta(): void
+    {
+        Http::fake();
+        config(['logging.channels.webhook.handler_with.url' => 'https://alerts.test/hook']);
+
+        Log::channel('webhook')->error('fallo de prueba');
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://alerts.test/hook'
+            && $request['message'] === 'fallo de prueba');
+    }
+
+    public function test_el_canal_telegram_envia_la_alerta(): void
+    {
+        Http::fake();
+        config([
+            'logging.channels.telegram.handler_with.botToken' => 'TOKEN',
+            'logging.channels.telegram.handler_with.chatId' => '12345',
+        ]);
+
+        Log::channel('telegram')->error('fallo de prueba');
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'api.telegram.org/botTOKEN/sendMessage')
+            && $request['chat_id'] === '12345');
     }
 
     private function adminToken(): string

@@ -58,13 +58,15 @@ return [
             'ignore_exceptions' => false,
         ],
 
-        // Diario + Slack (solo si hay webhook configurado). Usar LOG_CHANNEL=errors
-        // para centralizar los errores además de guardarlos en disco.
+        // Diario + los notificadores configurados. Usar LOG_CHANNEL=errors para
+        // centralizar los errores ademas de guardarlos en disco.
         'errors' => [
             'driver' => 'stack',
             'channels' => array_values(array_filter([
                 'daily',
                 env('LOG_SLACK_WEBHOOK_URL') ? 'slack' : null,
+                (env('LOG_TELEGRAM_BOT_TOKEN') && env('LOG_TELEGRAM_CHAT_ID')) ? 'telegram' : null,
+                env('LOG_WEBHOOK_URL') ? 'webhook' : null,
             ])),
             'ignore_exceptions' => false,
         ],
@@ -89,8 +91,28 @@ return [
             'url' => env('LOG_SLACK_WEBHOOK_URL'),
             'username' => 'Laravel Log',
             'emoji' => ':boom:',
-            'level' => env('LOG_SLACK_LEVEL', 'critical'),
+            'level' => env('LOG_ALERT_LEVEL', 'error'),
             'replace_placeholders' => true,
+        ],
+
+        // Alternativas a Slack (sin cuenta de pago).
+        'telegram' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_ALERT_LEVEL', 'error'),
+            'handler' => App\Logging\TelegramHandler::class,
+            'handler_with' => [
+                'botToken' => env('LOG_TELEGRAM_BOT_TOKEN'),
+                'chatId' => env('LOG_TELEGRAM_CHAT_ID'),
+            ],
+        ],
+
+        'webhook' => [
+            'driver' => 'monolog',
+            'level' => env('LOG_ALERT_LEVEL', 'error'),
+            'handler' => App\Logging\WebhookHandler::class,
+            'handler_with' => [
+                'url' => env('LOG_WEBHOOK_URL'),
+            ],
         ],
 
         'papertrail' => [

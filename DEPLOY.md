@@ -13,9 +13,12 @@ LOG_LEVEL=warning
 LOG_CHANNEL=errors
 LOG_DAILY_DAYS=20
 
-# Observabilidad (opcional): alertas de error por Slack
+# Observabilidad: alertas de error (configura UNO de estos; opcional)
+LOG_ALERT_LEVEL=error
 LOG_SLACK_WEBHOOK_URL=
-LOG_SLACK_LEVEL=critical
+LOG_TELEGRAM_BOT_TOKEN=
+LOG_TELEGRAM_CHAT_ID=
+LOG_WEBHOOK_URL=
 
 # Hosting compartido (sin Redis)
 CACHE_DRIVER=file
@@ -79,3 +82,21 @@ O usar el script existente: `bash deploy.sh <usuario@host> <ruta_public_html>`.
 - [ ] Assets del front actualizados (fuentes incluidas).
 - [ ] CORS con los orígenes correctos.
 - [ ] Monitoreo/alertas de logs activos.
+
+## 7. Alertas de error sin Slack (opcional)
+
+Con `LOG_CHANNEL=errors` los errores se guardan en disco y, ademas, se envian al notificador que configures. Elige UNA via:`r
+
+- **Telegram** (gratis, sin cuenta de pago): crea un bot con @BotFather, obten el token y tu chat id:`r
+  ``
+  LOG_TELEGRAM_BOT_TOKEN=123456:ABC...`r
+  LOG_TELEGRAM_CHAT_ID=987654321`r
+  ``
+- **Webhook generico** (Discord, Google Chat, Microsoft Teams o endpoint propio):`r
+  ``
+  LOG_WEBHOOK_URL=https://discord.com/api/webhooks/...`r
+  ``
+- **Slack** (si algun dia lo usas): `LOG_SLACK_WEBHOOK_URL=...`r
+
+`LOG_ALERT_LEVEL` define el nivel minimo (por defecto `error`). Los notificadores nunca lanzan errores si el envio falla.
+

@@ -11,6 +11,7 @@ APP_URL=https://api.cst-colombia.com.co
 APP_FRONTEND_URL=https://cst-colombia.com.co
 LOG_LEVEL=error
 LOG_CHANNEL=daily
+LOG_DAILY_DAYS=20
 
 # Hosting compartido (sin Redis)
 CACHE_DRIVER=file

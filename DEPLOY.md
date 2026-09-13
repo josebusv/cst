@@ -100,3 +100,6 @@ Con `LOG_CHANNEL=errors` los errores se guardan en disco y, ademas, se envian al
 
 `LOG_ALERT_LEVEL` define el nivel minimo (por defecto `error`). Los notificadores nunca lanzan errores si el envio falla.
 
+
+> Diagnostico y pruebas de logs/alertas con tinker: ver `docs/OBSERVABILIDAD.md`.
+

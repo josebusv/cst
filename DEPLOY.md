@@ -85,20 +85,21 @@ O usar el script existente: `bash deploy.sh <usuario@host> <ruta_public_html>`.
 
 ## 7. Alertas de error sin Slack (opcional)
 
-Con `LOG_CHANNEL=errors` los errores se guardan en disco y, ademas, se envian al notificador que configures. Elige UNA via:`r
+Con `LOG_CHANNEL=errors` los errores se guardan en disco y, ademas, se envian al notificador que configures. Elige UNA via:
 
-- **Telegram** (gratis, sin cuenta de pago): crea un bot con @BotFather, obten el token y tu chat id:`r
-  ``
-  LOG_TELEGRAM_BOT_TOKEN=123456:ABC...`r
-  LOG_TELEGRAM_CHAT_ID=987654321`r
-  ``
-- **Webhook generico** (Discord, Google Chat, Microsoft Teams o endpoint propio):`r
-  ``
-  LOG_WEBHOOK_URL=https://discord.com/api/webhooks/...`r
-  ``
-- **Slack** (si algun dia lo usas): `LOG_SLACK_WEBHOOK_URL=...`r
+- **Telegram** (gratis, sin cuenta de pago): crea un bot con @BotFather, obten el token y tu chat id:
+  ```
+  LOG_TELEGRAM_BOT_TOKEN=123456:ABC...
+  LOG_TELEGRAM_CHAT_ID=987654321
+  ```
+- **Webhook generico** (Discord, Google Chat, Microsoft Teams o endpoint propio):
+  ```
+  LOG_WEBHOOK_URL=https://discord.com/api/webhooks/...
+  ```
+- **Slack** (si algun dia lo usas): `LOG_SLACK_WEBHOOK_URL=...`
 
 `LOG_ALERT_LEVEL` define el nivel minimo (por defecto `error`). Los notificadores nunca lanzan errores si el envio falla.
+
 
 
 > Diagnostico y pruebas de logs/alertas con tinker: ver `docs/OBSERVABILIDAD.md`.
@@ -160,3 +161,38 @@ verifica que redirige todo a `public/`. Comprueba con:
 Ejecutar en el servidor para que aparezcan las unidades de medida y clasificaciones:
 php artisan db:seed --class="Database\Seeders\UnidadesTecnicasSeeder" --force
 php artisan db:seed --class="Database\Seeders\ClasificacionBiomedicaSeeder" --force
+
+## 10. Fix: la hoja de vida no guardaba las firmas
+
+Dos causas (commit backend `9e854b0` + frontend `374c02f`):
+
+1. El rol **Administrador** solo tenia `Ver/Imprimir Hoja De Vida` (sin `Crear/Editar/Firmar`),
+   por lo que el `PUT /hoja-vida` y `POST /hoja-vida/firma` devolvian 403.
+2. El frontend solo capturaba el canvas al pulsar "Guardar Firma"; al pulsar "Guardar Hoja de Vida"
+   no enviaba la firma dibujada.
+
+Aplicar SOLO el punto 1 en el servidor (el punto 2 va en el build del front):
+
+```bash
+php artisan db:seed --class="Database\Seeders\PermissionsDemoSeeder" --force
+```
+
+> Scripts incluidos (requieren SSH): `cst/deploy-preprod.sh` y `front_cst/deploy-preprod.sh`
+> (o `npm run deploy:preprod`). Configura `deploy.local.sh` con `SSH_HOST` y `SSH_PATH`.
+
+> `PermissionsDemoSeeder` usa `syncPermissions`, por lo que re-sembrar deja los roles exactamente
+> con la lista definida en el seeder. Si en el servidor hay permisos extra agregados a mano al rol
+> `Administrador`, respáldalos antes (o agrega desde la UI los permisos `Crear/Editar/Firmar Hoja De Vida`).
+
+### Verificacion del fix (post-deploy)
+
+```bash
+# 1) El rol ya tiene los permisos
+php artisan tinker --execute "echo Spatie\Permission\Models\Role::findByName('Administrador','api')->permissions()->where('name','like','%Hoja De Vida%')->pluck('name');"
+# 2) Login como un usuario Administrador y guardar con firma:
+curl -s -X PUT https://apitest.cst-colombia.com.co/api/auth/equipos/<ID>/hoja-vida \
+  -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+  -d '{"firma_realizo":"data:image/png;base64,iVBORw0KGgo...","nombre_realizo":"X"}' -w "\n%{http_code}\n"
+#   -> 200
+```
+

@@ -155,3 +155,8 @@ Document Root del (sub)dominio -> `.../cst/public`
 Sube el archivo `.htaccess` de la raiz del proyecto (incluido en este repo) y
 verifica que redirige todo a `public/`. Comprueba con:
 `curl.exe -s -o NUL -w "%{http_code}" https://tu-api/artisan`  -> debe dar 404
+
+### Catalogos requeridos (endoscopia/electronica)
+Ejecutar en el servidor para que aparezcan las unidades de medida y clasificaciones:
+php artisan db:seed --class="Database\Seeders\UnidadesTecnicasSeeder" --force
+php artisan db:seed --class="Database\Seeders\ClasificacionBiomedicaSeeder" --force

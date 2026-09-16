@@ -180,6 +180,24 @@ php artisan db:seed --class="Database\Seeders\PermissionsDemoSeeder" --force
 > Scripts incluidos (requieren SSH): `cst/deploy-preprod.sh` y `front_cst/deploy-preprod.sh`
 > (o `npm run deploy:preprod`). Configura `deploy.local.sh` con `SSH_HOST` y `SSH_PATH`.
 
+### Subir por zip: incluir TODAS las carpetas
+Un zip incompleto (falta `app/`, `config/`, `routes/`, `bootstrap/`, `vendor/`, etc.) hace que la
+API responda **500 en todas las peticiones**, incluso en el preflight CORS OPTIONS. Verifica el
+listado de carpetas antes de subir.
+
+No subir desde tu maquina:
+- `storage/logs/*` (son locales; confunden el diagnostico, aparecen rutas `C:\...`)
+- `bootstrap/cache/*.php` (caches con rutas de Windows)
+
+Despues de subir, en el servidor:
+```bash
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+php artisan cache:clear
+php artisan optimize
+```
+
 > `PermissionsDemoSeeder` usa `syncPermissions`, por lo que re-sembrar deja los roles exactamente
 > con la lista definida en el seeder. Si en el servidor hay permisos extra agregados a mano al rol
 > `Administrador`, respáldalos antes (o agrega desde la UI los permisos `Crear/Editar/Firmar Hoja De Vida`).

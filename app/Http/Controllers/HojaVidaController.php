@@ -49,6 +49,12 @@ class HojaVidaController extends Controller
             'uso' => 'nullable|in:diagnostico,tratamiento,laboratorio,rehabilitacion,esterilizacion,otro',
             'tipo_dispositivo' => 'nullable|in:activo,activo_terapeutico,combinado,dm_implantable,dm_invasivo,dm_invasivo_qx',
             'clase_riesgo' => 'nullable|in:clase_i,clase_iia,clase_iib,clase_iii',
+            'firma_realizo' => 'nullable|string',
+            'nombre_realizo' => 'nullable|string|max:255',
+            'cargo_realizo' => 'nullable|string|max:255',
+            'firma_aprobo' => 'nullable|string',
+            'nombre_aprobo' => 'nullable|string|max:255',
+            'cargo_aprobo' => 'nullable|string|max:255',
             'tipo_hoja' => 'nullable|in:electronica,endoscopia',
         ]);
 

@@ -54,7 +54,7 @@ class PermissionsDemoSeeder extends Seeder
             'Crear Sedes', 'Editar Sedes', 'Listar Sedes', 'Eliminar Sedes',
             'Crear Equipos', 'Editar Equipos', 'Listar Equipos', 'Eliminar Equipos',
             'Listar Reportes',
-            'Ver Hoja De Vida', 'Imprimir Hoja De Vida',
+            'Crear Hoja De Vida', 'Editar Hoja De Vida', 'Ver Hoja De Vida', 'Imprimir Hoja De Vida', 'Firmar Hoja De Vida',
             'Listar Departamentos', 'Listar Municipios', 'Listar Accesorios', 'Listar Tipos Equipos',
             'Ver Tickets', 'Crear Tickets', 'Editar Tickets', 'Eliminar Tickets', 'Cambiar Estado Tickets',
             'Ver Cronogramas', 'Crear Cronogramas', 'Editar Cronogramas', 'Eliminar Cronogramas', 'Generar Cronogramas',

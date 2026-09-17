@@ -90,6 +90,16 @@ class UserController extends Controller
         if ($request->filled('role_id')) {
             $role = \Spatie\Permission\Models\Role::find($request->role_id);
             if ($role) {
+                $actor = auth()->user();
+
+                if ($role->name === 'Super-Admin' && ! $actor->hasRole('Super-Admin')) {
+                    abort(403, 'Solo un Super-Admin puede asignar el rol Super-Admin.');
+                }
+
+                if ($user->id === $actor->id) {
+                    abort(403, 'No puedes cambiar tus propios roles.');
+                }
+
                 $user->syncRoles([$role->name]);
             }
         }
@@ -108,6 +118,16 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         EmpresaContext::autorizarEmpresa(optional($user->sede)->empresa_id);
+
+        $actor = auth()->user();
+
+        if ($user->id === $actor->id) {
+            abort(403, 'No puedes eliminar tu propia cuenta.');
+        }
+
+        if ($user->hasRole('Super-Admin') && User::role('Super-Admin')->count() <= 1) {
+            abort(403, 'No se puede eliminar al último Super-Admin.');
+        }
 
         $user->delete();
 

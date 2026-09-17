@@ -32,3 +32,9 @@ jobs:
 
       - name: Run tests
         run: php artisan test
+
+      # Informativo: pendiente el upgrade a Laravel 12 (audit de framework).
+      # Cambiar continue-on-error a false tras migrar.
+      - name: Audit dependencies
+        run: composer audit --no-dev
+        continue-on-error: true

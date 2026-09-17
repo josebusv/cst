@@ -8,7 +8,7 @@
     Header always set X-Frame-Options "SAMEORIGIN"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
     # HSTS solo si el dominio es HTTPS. max-age=1 ano; sin includeSubDomains por ahora.
-    Header always set Strict-Transport-Security "max-age=31536000" "expr=%{HTTPS} == 'on'"
+    Header always set Strict-Transport-Security "max-age=31536000" env=HTTPS
 </IfModule>
 
 <IfModule mod_rewrite.c>

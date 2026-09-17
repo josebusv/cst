@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Observers\CatalogoObserver;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -32,6 +33,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Politica de contraseñas: minimo 8, letras y numeros. En produccion
+        // ademas se verifica contra filtraciones conocidas (HIBP).
+        Password::defaults(function () {
+            $rule = Password::min(8)->letters()->numbers();
+
+            return app()->isProduction() ? $rule->uncompromised() : $rule;
+        });
+
         Gate::before(function ($user, $ability) {
             if ($user->hasRole('Super-Admin')) {
                 return true; // Otorga acceso completo si el rol es 'Super-Admin'

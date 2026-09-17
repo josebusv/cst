@@ -36,7 +36,7 @@ use App\Http\Controllers\ImportController;
 Route::group([
     'prefix' => 'auth'
 ], function ($router) {
-    Route::post('/login', [AuthController::class, 'login'])->name('login')->middleware('throttle:10,1');
+    Route::post('/login', [AuthController::class, 'login'])->name('login')->middleware('throttle:login');
 
     // Rutas públicas para recuperación de contraseña
     Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLinkEmail'])

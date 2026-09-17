@@ -8,6 +8,7 @@ use App\Http\Requests\StoreSedeRequest;
 use App\Models\Empresa;
 use App\Models\Sede;
 use App\Http\Resources\SedeResource;
+use App\Support\EmpresaContext;
 
 class SedeController extends Controller
 {
@@ -24,26 +25,13 @@ class SedeController extends Controller
      */
     public function index()
     {
-        $user = auth()->user();
-
-        if (!$user->sede || !$user->sede->empresa) {
-            return response()->json([
-                'message' => 'Usuario no tiene empresa asociada',
-                'data' => []
-            ], 200);
-        }
-
-        $empresa = $user->sede->empresa;
-
         $query = Sede::with('empresa');
 
-        if ($empresa->tipo === 'Cliente') {
-            $query->where('empresa_id', $empresa->id);
+        if (EmpresaContext::esRestringido()) {
+            $query->where('empresa_id', EmpresaContext::empresaId() ?? 0);
         }
 
-        $sedes = $query->paginate(15);
-
-        return SedeResource::collection($sedes);
+        return SedeResource::collection($query->paginate(15));
     }
 
     /**
@@ -67,18 +55,7 @@ class SedeController extends Controller
      */
     public function show(Sede $sede)
     {
-        $user = auth()->user();
-
-        if (!$user->sede || !$user->sede->empresa) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        $empresa = $user->sede->empresa;
-
-        // Ensure client users can only see their own sedes
-        if ($empresa->tipo === 'Cliente' && $sede->empresa_id !== $empresa->id) {
-            abort(403, 'Unauthorized action.');
-        }
+        EmpresaContext::autorizarEmpresa($sede->empresa_id);
 
         $sede->load(['departamento', 'municipio', 'empresa']);
         return new SedeResource($sede);
@@ -89,18 +66,7 @@ class SedeController extends Controller
      */
     public function update(UpdateSedeRequest $request, Sede $sede)
     {
-        $user = auth()->user();
-
-        if (!$user->sede || !$user->sede->empresa) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        $empresa = $user->sede->empresa;
-
-        // Ensure client users can only update their own sedes
-        if ($empresa->tipo === 'Cliente' && $sede->empresa_id !== $empresa->id) {
-            abort(403, 'Unauthorized action.');
-        }
+        EmpresaContext::autorizarEmpresa($sede->empresa_id);
 
         $validated = $request->validated();
 
@@ -118,18 +84,7 @@ class SedeController extends Controller
      */
     public function destroy(Sede $sede)
     {
-        $user = auth()->user();
-
-        if (!$user->sede || !$user->sede->empresa) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        $empresa = $user->sede->empresa;
-
-        // Ensure client users can only delete their own sedes
-        if ($empresa->tipo === 'Cliente' && $sede->empresa_id !== $empresa->id) {
-            abort(403, 'Unauthorized action.');
-        }
+        EmpresaContext::autorizarEmpresa($sede->empresa_id);
 
         $sede->delete();
 

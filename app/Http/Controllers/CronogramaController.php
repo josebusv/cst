@@ -8,6 +8,7 @@ use App\Models\Empresa;
 use App\Http\Resources\CronogramaResource;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Support\EmpresaContext;
 
 class CronogramaController extends Controller
 {
@@ -22,8 +23,14 @@ class CronogramaController extends Controller
 
     public function index()
     {
-        $cronogramas = Cronograma::with(['equipo', 'tecnico', 'reporte'])->paginate(15);
-        return CronogramaResource::collection($cronogramas);
+        $query = Cronograma::with(['equipo', 'tecnico', 'reporte']);
+
+        if (EmpresaContext::esRestringido()) {
+            $empresaId = EmpresaContext::empresaId() ?? 0;
+            $query->whereHas('equipo.sede', fn ($q) => $q->where('empresa_id', $empresaId));
+        }
+
+        return CronogramaResource::collection($query->paginate(15));
     }
 
     public function store(Request $request)
@@ -43,6 +50,8 @@ class CronogramaController extends Controller
             'observaciones' => 'nullable|string',
         ]);
 
+        EmpresaContext::autorizarEmpresa(optional(Equipo::findOrFail($validated['equipo_id'])->sede)->empresa_id);
+
         $cronograma = Cronograma::create($validated);
         $cronograma->load(['equipo', 'tecnico', 'reporte']);
 
@@ -54,12 +63,15 @@ class CronogramaController extends Controller
 
     public function show(Cronograma $cronograma)
     {
+        EmpresaContext::autorizarEmpresa(optional(optional($cronograma->equipo)->sede)->empresa_id);
         $cronograma->load(['equipo', 'tecnico', 'reporte', 'clasificacionBiomedica']);
         return new CronogramaResource($cronograma);
     }
 
     public function update(Request $request, Cronograma $cronograma)
     {
+        EmpresaContext::autorizarEmpresa(optional(optional($cronograma->equipo)->sede)->empresa_id);
+
         $validated = $request->validate([
             'equipo_id' => 'sometimes|exists:equipos,id',
             'year' => 'sometimes|string|size:4',
@@ -90,12 +102,15 @@ class CronogramaController extends Controller
 
     public function destroy(Cronograma $cronograma)
     {
+        EmpresaContext::autorizarEmpresa(optional(optional($cronograma->equipo)->sede)->empresa_id);
         $cronograma->delete();
         return response()->json(['message' => 'Cronograma eliminado exitosamente']);
     }
 
     public function cronogramasPorEmpresa($empresaId)
     {
+        EmpresaContext::autorizarEmpresa($empresaId);
+
         $cronogramas = Cronograma::whereHas('equipo.sede', function ($query) use ($empresaId) {
             $query->where('empresa_id', $empresaId);
         })->with(['equipo', 'tecnico', 'reporte'])->paginate(15);
@@ -105,6 +120,8 @@ class CronogramaController extends Controller
 
     public function cronogramasPorEquipo($equipoId)
     {
+        EmpresaContext::autorizarEmpresa(optional(Equipo::findOrFail($equipoId)->sede)->empresa_id);
+
         $cronogramas = Cronograma::where('equipo_id', $equipoId)
             ->with(['tecnico', 'reporte'])
             ->orderBy('year')
@@ -137,7 +154,11 @@ class CronogramaController extends Controller
             ->where('month', $request->month)
             ->with(['equipo.sede', 'tecnico', 'reporte']);
 
-        if ($request->empresa_id) {
+        if (EmpresaContext::esRestringido()) {
+            $query->whereHas('equipo.sede', function ($q) {
+                $q->where('empresa_id', EmpresaContext::empresaId() ?? 0);
+            });
+        } elseif ($request->empresa_id) {
             $query->whereHas('equipo.sede', function ($q) use ($request) {
                 $q->where('empresa_id', $request->empresa_id);
             });
@@ -153,6 +174,8 @@ class CronogramaController extends Controller
     public function anual($empresaId, Request $request)
     {
         $request->validate(['year' => 'required|string|size:4']);
+
+        EmpresaContext::autorizarEmpresa($empresaId);
 
         $empresa = Empresa::findOrFail($empresaId);
 
@@ -219,6 +242,8 @@ class CronogramaController extends Controller
             'clasificacion_biomedica_id' => 'required|exists:clasificaciones_biomedicas,id',
             'tecnico_id' => 'nullable|exists:users,id',
         ]);
+
+        EmpresaContext::autorizarEmpresa(optional(Equipo::findOrFail($request->equipo_id)->sede)->empresa_id);
 
         $intervalos = [
             'mensual' => 1,

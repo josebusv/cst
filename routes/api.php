@@ -144,9 +144,6 @@ Route::post('cronogramas/generar', [CronogramaController::class, 'generar']);
         Route::get('mi-empresa/equipos', [App\Http\Controllers\EmpresaDataController::class, 'equiposEmpresa']);
         Route::get('mi-empresa/info', [App\Http\Controllers\EmpresaDataController::class, 'infoEmpresa']);
     });
-    
-    // Ruta pública de impresión (requiere token por query param)
-    Route::get('equipos/{equipoId}/hoja-vida/print', [HojaVidaController::class, 'print']);
 });
 
 // Proxy de imágenes (público, con CORS)

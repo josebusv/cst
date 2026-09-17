@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreReporteRequest;
 use App\Models\Reporte;
+use App\Models\Equipo;
 use App\Http\Resources\ReporteResource;
+use App\Support\EmpresaContext;
 
 class ReporteController extends Controller
 {
@@ -22,11 +24,16 @@ class ReporteController extends Controller
     public function index()
     {
         // Trae los reportes con equipo, sede y empresa (cliente), paginados
-        $reportes = Reporte::with([
+        $query = Reporte::with([
             'equipo.sede.empresa'
-        ])->paginate(10);
+        ]);
 
-        return ReporteResource::collection($reportes);
+        if (EmpresaContext::esRestringido()) {
+            $empresaId = EmpresaContext::empresaId() ?? 0;
+            $query->whereHas('equipo.sede', fn ($q) => $q->where('empresa_id', $empresaId));
+        }
+
+        return ReporteResource::collection($query->paginate(10));
     }
 
     /**
@@ -50,6 +57,7 @@ class ReporteController extends Controller
      */
     public function show(Reporte $reporte)
     {
+        EmpresaContext::autorizarEmpresa(optional(optional($reporte->equipo)->sede)->empresa_id);
         $reporte->load(['equipo.sede.empresa']);
         return new ReporteResource($reporte);
     }
@@ -75,6 +83,8 @@ class ReporteController extends Controller
      */
     public function updateFirmaTecnico(Request $request, Reporte $reporte)
     {
+        EmpresaContext::autorizarEmpresa(optional(optional($reporte->equipo)->sede)->empresa_id);
+
         $request->validate([
             'firma_tecnico' => 'required|string',
         ]);
@@ -96,6 +106,8 @@ class ReporteController extends Controller
      */
     public function updateFirmaCliente(Request $request, Reporte $reporte)
     {
+        EmpresaContext::autorizarEmpresa(optional(optional($reporte->equipo)->sede)->empresa_id);
+
         $request->validate([
             'firma_cliente' => 'required|string',
         ]);
@@ -117,6 +129,9 @@ class ReporteController extends Controller
      */
     public function reportesPorEquipo($equipoId)
     {
+        $equipo = Equipo::findOrFail($equipoId);
+        EmpresaContext::autorizarEmpresa(optional($equipo->sede)->empresa_id);
+
         $reportes = Reporte::where('equipo_id', $equipoId)
             ->with(['equipo.sede.empresa'])
             ->paginate(10);

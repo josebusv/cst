@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Gate;
 use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
+use App\Support\EmpresaContext;
 
 class UserController extends Controller
 {
@@ -27,8 +28,14 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::with(['sede', 'roles'])->paginate(15);
-        return UserResource::collection($users);
+        $query = User::with(['sede', 'roles']);
+
+        if (EmpresaContext::esRestringido()) {
+            $empresaId = EmpresaContext::empresaId() ?? 0;
+            $query->whereHas('sede', fn ($q) => $q->where('empresa_id', $empresaId));
+        }
+
+        return UserResource::collection($query->paginate(15));
     }
 
     /**
@@ -60,6 +67,7 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
+        EmpresaContext::autorizarEmpresa(optional($user->sede)->empresa_id);
         $user->load(['sede', 'roles']);
         return new UserResource($user);
     }
@@ -69,6 +77,8 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, User $user)
     {
+        EmpresaContext::autorizarEmpresa(optional($user->sede)->empresa_id);
+
         $validated = $request->validated();
 
         if (isset($validated['password'])) {
@@ -97,6 +107,8 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
+        EmpresaContext::autorizarEmpresa(optional($user->sede)->empresa_id);
+
         $user->delete();
 
         return response()->json(['message' => 'Usuario eliminado exitosamente']);
@@ -107,6 +119,8 @@ class UserController extends Controller
      */
     public function usuariosPorEmpresa($empresaId)
     {
+        EmpresaContext::autorizarEmpresa($empresaId);
+
         $usuarios = User::whereHas('sede', function ($query) use ($empresaId) {
             $query->where('empresa_id', $empresaId);
         })->with(['sede', 'roles'])->paginate(15);

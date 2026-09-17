@@ -25,6 +25,7 @@ use App\Models\User;
 use App\Models\ClasificacionBiomedica;
 use App\Models\Consumible;
 use App\Http\Resources\UserResource;
+use App\Support\EmpresaContext;
 
 class ListaController extends Controller
 {
@@ -86,6 +87,12 @@ class ListaController extends Controller
      */
     public function listarClientes()
     {
+        if (EmpresaContext::esRestringido()) {
+            return ClienteListResource::collection(
+                Cliente::where('id', EmpresaContext::empresaId() ?? 0)->orderBy('nombre')->get()
+            );
+        }
+
         $clientes = CatalogoCache::remember(
             'lista.clientes',
             self::TTL_OPERATIVO,
@@ -100,7 +107,10 @@ class ListaController extends Controller
      */
     public function listarSedes($empresa)
     {
-        $empresa = Empresa::findOrFail($empresa);
+        $empresaId = (int) $empresa;
+        EmpresaContext::autorizarEmpresa($empresaId);
+
+        $empresa = Empresa::findOrFail($empresaId);
 
         $sedes = CatalogoCache::remember(
             'lista.sedes.' . $empresa->id,
@@ -226,6 +236,10 @@ class ListaController extends Controller
      */
     public function listarEmpresas()
     {
+        if (EmpresaContext::esRestringido()) {
+            return Empresa::where('id', EmpresaContext::empresaId() ?? 0)->get(['id', 'nombre', 'tipo']);
+        }
+
         return CatalogoCache::remember(
             'lista.empresas',
             self::TTL_OPERATIVO,

@@ -7,8 +7,7 @@ use Illuminate\Support\Facades\Cache;
 use App\Models\Equipo;
 use App\Models\HojaVida;
 use Illuminate\Support\Facades\Storage;
-use Tymon\JWTAuth\Facades\JWTAuth;
-use Tymon\JWTAuth\Exceptions\JWTException;
+use App\Support\EmpresaContext;
 
 class HojaVidaController extends Controller
 {
@@ -21,6 +20,8 @@ class HojaVidaController extends Controller
 
     public function show($equipoId)
     {
+        EmpresaContext::autorizarEmpresa(optional(Equipo::findOrFail($equipoId)->sede)->empresa_id);
+
         $hojaVida = HojaVida::with('realizoUser', 'aproboUser')
             ->where('equipo_id', $equipoId)
             ->firstOrFail();
@@ -30,6 +31,8 @@ class HojaVidaController extends Controller
 
     public function update(Request $request, $equipoId)
     {
+        EmpresaContext::autorizarEmpresa(optional(Equipo::findOrFail($equipoId)->sede)->empresa_id);
+
         $hojaVida = HojaVida::firstOrCreate(
             ['equipo_id' => $equipoId],
             [
@@ -72,6 +75,8 @@ class HojaVidaController extends Controller
 
     public function guardarFirma(Request $request, $equipoId)
     {
+        EmpresaContext::autorizarEmpresa(optional(Equipo::findOrFail($equipoId)->sede)->empresa_id);
+
         $hojaVida = HojaVida::firstOrCreate(
             ['equipo_id' => $equipoId],
             [
@@ -127,122 +132,6 @@ class HojaVidaController extends Controller
         return response()->json(['data' => $unidades]);
     }
 
-    public function print($equipoId, Request $request)
-    {
-        $token = $request->query('token');
-        if (!$token) {
-            abort(401, 'Token requerido');
-        }
-
-        try {
-            JWTAuth::setToken($token)->authenticate();
-        } catch (JWTException $e) {
-            abort(401, 'Token inválido o expirado');
-        }
-
-        $equipo = \App\Models\Equipo::with([
-            'sede.empresa',
-            'sede.departamento',
-            'sede.municipio',
-            'tipoEquipo',
-            'clasificacionBiomedica',
-            'hojaVida.realizoUser',
-            'hojaVida.aproboUser',
-            'accesorios',
-            'consumibles',
-        ])->findOrFail($equipoId);
-
-        $hojaVida = $equipo->hojaVida;
-        $empresa = $equipo->sede?->empresa;
-        $sede = $equipo->sede;
-        $principal = \App\Models\Empresa::where('tipo', 'principal')->first();
-        $logoPath = $empresa?->logo_url;
-
-        $ciudad = implode(', ', array_filter([
-            $sede?->municipio?->nombre,
-            $sede?->departamento?->nombre,
-        ]));
-
-        $especificaciones = $hojaVida?->especificaciones_tecnicas ?? [];
-
-        $camposElectronica = [
-            ['key' => 'voltaje_max', 'label' => 'Voltaje máx.', 'categoria' => 'voltaje'],
-            ['key' => 'voltaje_min', 'label' => 'Voltaje mín.', 'categoria' => 'voltaje'],
-            ['key' => 'corriente_max', 'label' => 'Corriente máx.', 'categoria' => 'corriente'],
-            ['key' => 'corriente_min', 'label' => 'Corriente mín.', 'categoria' => 'corriente'],
-            ['key' => 'potencia', 'label' => 'Potencia', 'categoria' => 'potencia'],
-            ['key' => 'frecuencia', 'label' => 'Frecuencia', 'categoria' => 'frecuencia'],
-            ['key' => 'presion_max', 'label' => 'Presión máx.', 'categoria' => 'presion'],
-            ['key' => 'velocidad', 'label' => 'Velocidad', 'categoria' => 'velocidad'],
-            ['key' => 'capacidad', 'label' => 'Capacidad', 'categoria' => 'capacidad'],
-            ['key' => 'peso', 'label' => 'Peso', 'categoria' => 'peso'],
-            ['key' => 'temperatura', 'label' => 'Temperatura', 'categoria' => 'temperatura'],
-            ['key' => 'dimensiones', 'label' => 'Dimensiones', 'categoria' => 'dimensiones'],
-        ];
-
-        $camposEndoscopia = [
-            ['key' => 'campo_vision', 'label' => 'Campo de visión', 'categoria' => 'angulo'],
-            ['key' => 'min_distancia_visible', 'label' => 'Min. Dist. Visible', 'categoria' => 'longitud'],
-            ['key' => 'profundidad', 'label' => 'Profundidad', 'categoria' => 'longitud'],
-            ['key' => 'velocidad_flujo_aire', 'label' => 'Veloc. flujo aire', 'categoria' => 'flujo'],
-            ['key' => 'longitud_trabajo', 'label' => 'Long. de trabajo', 'categoria' => 'longitud'],
-            ['key' => 'dia_tubo_insercion', 'label' => 'Dia. tubo inserción', 'categoria' => 'longitud'],
-            ['key' => 'dia_canal_bx', 'label' => 'Dia. de canal bx', 'categoria' => 'longitud'],
-            ['key' => 'dia_externo_distal', 'label' => 'Dia. externo distal', 'categoria' => 'longitud'],
-            ['key' => 'doblado_ud', 'label' => 'Doblado U/D', 'categoria' => 'angulo'],
-            ['key' => 'peso', 'label' => 'Peso', 'categoria' => 'peso'],
-            ['key' => 'doblado_rl', 'label' => 'Doblado R/L', 'categoria' => 'angulo'],
-            ['key' => 'longitud_total', 'label' => 'Long. Total', 'categoria' => 'longitud'],
-        ];
-
-        $campos = $equipo->tipo_hoja === 'endoscopia' ? $camposEndoscopia : $camposElectronica;
-
-        $fuentes = [
-            ['key' => 'agua', 'label' => 'Agua'],
-            ['key' => 'electricidad', 'label' => 'Electricidad'],
-            ['key' => 'derivados_petroleo', 'label' => 'Derv. Petróleo'],
-            ['key' => 'aire', 'label' => 'Aire'],
-            ['key' => 'energia_solar', 'label' => 'Energía Solar'],
-            ['key' => 'vapor', 'label' => 'Vapor'],
-            ['key' => 'bateria', 'label' => 'Batería'],
-        ];
-
-        $planos = [
-            ['key' => 'electrico', 'label' => 'Eléctrico'],
-            ['key' => 'hidraulico', 'label' => 'Hidráulico'],
-            ['key' => 'neumatico', 'label' => 'Neumático'],
-            ['key' => 'mecanico', 'label' => 'Mecánico'],
-            ['key' => 'electronico', 'label' => 'Electrónico'],
-        ];
-
-        $tecnologias = [
-            ['key' => 'electrico', 'label' => 'Eléctrico'],
-            ['key' => 'electronico', 'label' => 'Electrónico'],
-            ['key' => 'mecanico', 'label' => 'Mecánico'],
-            ['key' => 'electromecanico', 'label' => 'Electromecánico'],
-            ['key' => 'hidraulico', 'label' => 'Hidráulico'],
-            ['key' => 'neumatico', 'label' => 'Neumático'],
-            ['key' => 'vapor', 'label' => 'Vapor'],
-            ['key' => 'energia_solar', 'label' => 'Energía solar'],
-        ];
-
-        $manuales = [
-            ['key' => 'operacion', 'label' => 'Operación'],
-            ['key' => 'mantenimiento', 'label' => 'Mantenimiento'],
-            ['key' => 'servicio', 'label' => 'Servicio'],
-            ['key' => 'ficha_tecnica', 'label' => 'Ficha técnica'],
-            ['key' => 'otro', 'label' => 'Otro'],
-        ];
-
-        $html = view('hoja-vida-print', compact(
-            'equipo', 'hojaVida', 'empresa', 'sede', 'principal',
-            'logoPath', 'ciudad', 'especificaciones', 'campos',
-            'fuentes', 'planos', 'tecnologias', 'manuales'
-        ))->render();
-
-        return response($html)->header('Content-Type', 'text/html; charset=utf-8');
-    }
-
     public function uploadImagen(Request $request, $equipoId)
     {
         $request->validate([
@@ -250,6 +139,7 @@ class HojaVidaController extends Controller
         ]);
 
         $equipo = Equipo::findOrFail($equipoId);
+        EmpresaContext::autorizarEmpresa(optional($equipo->sede)->empresa_id);
 
         if ($equipo->imagen) {
             Storage::disk('public')->delete($equipo->imagen);

@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Auth\Access\AuthorizationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class Handler extends ExceptionHandler
 {
@@ -62,11 +64,19 @@ class Handler extends ExceptionHandler
                 ], 405);
             }
 
-            if ($exception instanceof \Spatie\Permission\Exceptions\UnauthorizedException) {
+            if ($exception instanceof AuthorizationException || $exception instanceof \Spatie\Permission\Exceptions\UnauthorizedException) {
                 return response()->json([
                     'message' => 'No tienes los permisos necesarios para acceder a este recurso.',
                     'error' => $exception->getMessage(),
                 ], 403);
+            }
+
+            // Cualquier otra HttpException (403 de abort(), 429, 400, etc.) conserva su codigo.
+            if ($exception instanceof HttpException) {
+                return response()->json([
+                    'message' => $exception->getMessage() ?: 'Solicitud rechazada',
+                    'error' => $exception->getMessage(),
+                ], $exception->getStatusCode(), $exception->getHeaders());
             }
 
             return response()->json([

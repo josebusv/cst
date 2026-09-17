@@ -11,6 +11,7 @@ use App\Models\Empresa;
 use App\Models\UnidadTecnica;
 use App\Http\Resources\EquipoResource;
 use App\Http\Resources\CronogramaResource;
+use App\Support\EmpresaContext;
 
 class EquipoController extends Controller
 {
@@ -25,8 +26,13 @@ class EquipoController extends Controller
 
     public function index()
     {
-        $equipos = Equipo::with('sede')->paginate(15);
-        return EquipoResource::collection($equipos);
+        $query = Equipo::with('sede');
+
+        if (EmpresaContext::esRestringido()) {
+            $query->whereHas('sede', fn ($q) => $q->where('empresa_id', EmpresaContext::empresaId() ?? 0));
+        }
+
+        return EquipoResource::collection($query->paginate(15));
     }
 
     public function store(StoreEquipoRequest $request)
@@ -51,12 +57,14 @@ class EquipoController extends Controller
 
     public function show(Equipo $equipo)
     {
+        EmpresaContext::autorizarEmpresa(optional($equipo->sede)->empresa_id);
         $equipo->load('sede');
         return new EquipoResource($equipo);
     }
 
     public function update(UpdateEquipoRequest $request, Equipo $equipo)
     {
+        EmpresaContext::autorizarEmpresa(optional($equipo->sede)->empresa_id);
         $validated = $request->validated();
 
         $equipo->update($validated);
@@ -70,12 +78,15 @@ class EquipoController extends Controller
 
     public function destroy(Equipo $equipo)
     {
+        EmpresaContext::autorizarEmpresa(optional($equipo->sede)->empresa_id);
         $equipo->delete();
         return response()->json(['message' => 'Equipo eliminado exitosamente']);
     }
 
     public function equiposPorEmpresa($empresaId)
     {
+        EmpresaContext::autorizarEmpresa($empresaId);
+
         $perPage = (int) request()->query('per_page', 15);
         $perPage = max(1, min($perPage, 100));
 
@@ -111,6 +122,8 @@ class EquipoController extends Controller
                 $query->orderBy('created_at', 'desc');
             },
         ])->findOrFail($id);
+
+        EmpresaContext::autorizarEmpresa(optional($equipo->sede)->empresa_id);
 
         $empresa = $equipo->sede?->empresa;
         $principal = Empresa::where('tipo', 'principal')->first();

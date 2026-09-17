@@ -11,6 +11,7 @@ use App\Models\Ticket;
 use App\Models\Reporte;
 use App\Models\Cronograma;
 use Carbon\Carbon;
+use App\Support\EmpresaContext;
 
 class DashboardController extends Controller
 {
@@ -21,6 +22,10 @@ class DashboardController extends Controller
 
     public function admin()
     {
+        if (EmpresaContext::esRestringido()) {
+            abort(403, 'El dashboard global no está disponible para el portal cliente.');
+        }
+
         $totalClientes = Cliente::count();
         $totalEquipos = Equipo::count();
         $totalSedes = Sede::count();

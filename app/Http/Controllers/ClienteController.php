@@ -12,6 +12,7 @@ use App\Http\Resources\ClienteResource;
 use App\Http\Resources\SedeResource;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\DB;
+use App\Support\EmpresaContext;
 
 class ClienteController extends Controller
 {
@@ -31,8 +32,13 @@ class ClienteController extends Controller
      */
     public function index()
     {
-        $clientes = Cliente::with('sedes')->paginate(15);
-        return ClienteResource::collection($clientes);
+        $query = Cliente::with('sedes');
+
+        if (EmpresaContext::esRestringido()) {
+            $query->where('id', EmpresaContext::empresaId() ?? 0);
+        }
+
+        return ClienteResource::collection($query->paginate(15));
     }
 
     /**
@@ -84,6 +90,7 @@ class ClienteController extends Controller
      */
     public function show(Cliente $cliente)
     {
+        EmpresaContext::autorizarEmpresa($cliente->id);
         $cliente->load(['sedes.departamento', 'sedes.municipio']);
         return new ClienteResource($cliente);
     }
@@ -93,6 +100,8 @@ class ClienteController extends Controller
      */
     public function update(UpdateClienteRequest $request, Cliente $cliente)
     {
+        EmpresaContext::autorizarEmpresa($cliente->id);
+
         $validated = $request->validated();
 
         // Manejar el logo por separado para evitar sobreescribirlo
@@ -121,6 +130,8 @@ class ClienteController extends Controller
      */
     public function destroy(Cliente $cliente)
     {
+        EmpresaContext::autorizarEmpresa($cliente->id);
+
         // Eliminar el archivo de logo si existe
         $cliente->deleteLogoFile();
 
@@ -131,6 +142,8 @@ class ClienteController extends Controller
 
     public function tecnicos($clienteId)
     {
+        EmpresaContext::autorizarEmpresa($clienteId);
+
         $empresa = Empresa::findOrFail($clienteId);
         $tecnicos = $empresa->tecnicos()->with('roles')->get();
         return UserResource::collection($tecnicos);
@@ -138,6 +151,8 @@ class ClienteController extends Controller
 
     public function asignarTecnico(Request $request, $clienteId)
     {
+        EmpresaContext::autorizarEmpresa($clienteId);
+
         $request->validate([
             'user_id' => 'required|exists:users,id',
         ]);
@@ -150,6 +165,8 @@ class ClienteController extends Controller
 
     public function removerTecnico($clienteId, $userId)
     {
+        EmpresaContext::autorizarEmpresa($clienteId);
+
         $empresa = Empresa::findOrFail($clienteId);
         $empresa->tecnicos()->detach($userId);
 

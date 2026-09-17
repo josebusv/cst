@@ -111,4 +111,21 @@ class CronogramaCierreTest extends TestCase
         $this->assertSame($reporte->id, $cronograma->reporte_id);
         $this->assertNotNull($cronograma->fecha_ejecucion);
     }
+
+    public function test_comando_marca_vencidos_los_pendientes_antiguos(): void
+    {
+        $vencido = Cronograma::create([
+            'equipo_id' => $this->equipo->id, 'year' => '2026', 'month' => '01',
+            'estado' => 'pendiente', 'fecha_programada' => now()->subMonth()->toDateString(),
+        ]);
+        $vigente = Cronograma::create([
+            'equipo_id' => $this->equipo->id, 'year' => '2099', 'month' => '01',
+            'estado' => 'pendiente', 'fecha_programada' => now()->addMonth()->toDateString(),
+        ]);
+
+        $this->artisan('cronogramas:marcar-vencidos')->assertExitCode(0);
+
+        $this->assertSame('vencido', $vencido->fresh()->estado);
+        $this->assertSame('pendiente', $vigente->fresh()->estado);
+    }
 }

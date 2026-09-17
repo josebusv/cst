@@ -180,6 +180,10 @@ class CronogramaController extends Controller
             ->where('month', $request->month)
             ->with(['equipo.sede', 'tecnico', 'reporte']);
 
+        $this->marcarVencidos(
+            EmpresaContext::esRestringido() ? EmpresaContext::empresaId() : ($request->empresa_id ? (int) $request->empresa_id : null)
+        );
+
         if (EmpresaContext::esRestringido()) {
             $query->whereHas('equipo.sede', function ($q) {
                 $q->where('empresa_id', EmpresaContext::empresaId() ?? 0);
@@ -202,6 +206,8 @@ class CronogramaController extends Controller
         $request->validate(['year' => 'required|string|size:4']);
 
         EmpresaContext::autorizarEmpresa($empresaId);
+
+        $this->marcarVencidos($empresaId);
 
         $empresa = Empresa::findOrFail($empresaId);
 
@@ -247,6 +253,19 @@ class CronogramaController extends Controller
                 })->values(),
             ],
         ]);
+    }
+
+    /**
+     * Marca como vencidos los pendientes cuya fecha programada ya paso.
+     * Se ejecuta de forma perezosa al consultar (y tambien via comando diario).
+     */
+    private function marcarVencidos(?int $empresaId = null): void
+    {
+        Cronograma::where('estado', 'pendiente')
+            ->whereNotNull('fecha_programada')
+            ->whereDate('fecha_programada', '<', now()->toDateString())
+            ->when($empresaId, fn ($q) => $q->whereHas('equipo.sede', fn ($s) => $s->where('empresa_id', $empresaId)))
+            ->update(['estado' => 'vencido']);
     }
 
     private function ubicacionSede(Equipo $equipo): ?string

@@ -101,6 +101,18 @@ class CronogramaController extends Controller
             $validated['fecha_ejecucion'] = now();
         }
 
+        // Vincular un reporte cierra el cronograma automaticamente.
+        if (array_key_exists('reporte_id', $validated) && $validated['reporte_id'] && ! isset($validated['estado'])) {
+            $validated['estado'] = 'completado';
+            $validated['fecha_ejecucion'] = $cronograma->fecha_ejecucion ?? now();
+        }
+
+        $reporteId = $validated['reporte_id'] ?? $cronograma->reporte_id;
+        $estadoFinal = $validated['estado'] ?? $cronograma->estado;
+        if ($estadoFinal === 'completado' && ! $reporteId) {
+            abort(422, 'Para marcar el cronograma como completado debe vincular un reporte.');
+        }
+
         if (! empty($validated['ubicacion'])) {
             $cronograma->equipo?->update(['ubicacion' => $validated['ubicacion']]);
         }

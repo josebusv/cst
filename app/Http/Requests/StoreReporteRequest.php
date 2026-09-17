@@ -26,6 +26,7 @@ class StoreReporteRequest extends FormRequest
         $baseRules = [
             'equipo_id' => 'required|exists:equipos,id',
             'servicio' => 'nullable|string|max:255',
+            'cronograma_id' => 'nullable|exists:cronogramas,id',
             'tipo_reporte' => 'required|string|max:20',
             'correctivo' => 'nullable|string',
             'preventivo' => 'nullable|string',

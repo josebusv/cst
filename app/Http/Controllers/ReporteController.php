@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\StoreReporteRequest;
 use App\Models\Reporte;
 use App\Models\Equipo;
+use App\Models\Cronograma;
 use App\Http\Resources\ReporteResource;
 use App\Support\EmpresaContext;
 
@@ -51,7 +52,20 @@ class ReporteController extends Controller
             $equipo->update(['servicio' => $validated['servicio']]);
         }
 
-        $reporte = Reporte::create(collect($validated)->except('servicio')->toArray());
+        $reporte = Reporte::create(collect($validated)->except(['servicio', 'cronograma_id'])->toArray());
+
+        // Cierre del cronograma: el mantenimiento programado se cumple con su reporte.
+        if (! empty($validated['cronograma_id'])) {
+            $cronograma = Cronograma::find($validated['cronograma_id']);
+            if ($cronograma && (int) $cronograma->equipo_id === (int) $equipo->id) {
+                $cronograma->update([
+                    'reporte_id' => $reporte->id,
+                    'estado' => 'completado',
+                    'fecha_ejecucion' => $cronograma->fecha_ejecucion ?? now(),
+                ]);
+            }
+        }
+
         $reporte->load(['equipo.sede.empresa']);
 
         return response()->json([

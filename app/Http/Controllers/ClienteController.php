@@ -22,6 +22,8 @@ class ClienteController extends Controller
         $this->middleware('can:Crear Clientes')->only('store');
         $this->middleware('can:Editar Clientes')->only('update');
         $this->middleware('can:Eliminar Clientes')->only('destroy');
+        $this->middleware('can:Ver Técnicos')->only('tecnicos');
+        $this->middleware('can:Asignar Operadores')->only(['asignarTecnico', 'removerTecnico']);
     }
 
     /**

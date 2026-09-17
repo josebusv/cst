@@ -86,7 +86,6 @@ class HojaVidaController extends Controller
             'firma' => 'required|string',
             'nombre' => 'nullable|string|max:255',
             'cargo' => 'nullable|string|max:255',
-            'user_id' => 'nullable|exists:users,id',
         ]);
 
         $data = [
@@ -95,10 +94,11 @@ class HojaVidaController extends Controller
             'cargo_' . $validated['tipo'] => $validated['cargo'] ?? null,
         ];
 
+        // El autor de la firma siempre es el usuario autenticado (no se confia en el cliente).
         if ($validated['tipo'] === 'realizo') {
-            $data['firma_realizo_user_id'] = $validated['user_id'] ?? auth()->id();
+            $data['firma_realizo_user_id'] = auth()->id();
         } else {
-            $data['firma_aprobo_user_id'] = $validated['user_id'] ?? auth()->id();
+            $data['firma_aprobo_user_id'] = auth()->id();
         }
 
         $hojaVida->update($data);

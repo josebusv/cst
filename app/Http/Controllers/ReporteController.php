@@ -13,6 +13,7 @@ class ReporteController extends Controller
     {
         $this->middleware('can:Listar Reportes')->only(['index', 'show', 'reportesPorEquipo']);
         $this->middleware('can:Crear Reportes')->only('store');
+        $this->middleware('can:Firmar Reportes')->only(['updateFirmaTecnico', 'updateFirmaCliente']);
     }
 
     /**

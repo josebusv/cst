@@ -43,6 +43,7 @@ class HojaVidaController extends Controller
         );
 
         $validated = $request->validate([
+            'mantenimiento_por' => 'nullable|string|max:255',
             'contacto_responsable' => 'nullable|string|max:255',
             'telefono_responsable' => 'nullable|string|max:50',
             'especificaciones_tecnicas' => 'nullable|array',

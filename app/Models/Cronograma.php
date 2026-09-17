@@ -15,6 +15,7 @@ class Cronograma extends Model
         'year',
         'month',
         'clasificacion_biomedica_id',
+        'clase_riesgo',
         'reporte_id',
         'estado',
         'periodicidad',

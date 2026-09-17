@@ -92,7 +92,7 @@ class EquipoController extends Controller
 
         $equipos = Equipo::whereHas('sede', function ($query) use ($empresaId) {
             $query->where('empresa_id', $empresaId);
-        })->with('sede')->paginate($perPage);
+        })->with(['sede', 'hojaVida'])->paginate($perPage);
 
         return EquipoResource::collection($equipos);
     }
@@ -146,7 +146,7 @@ class EquipoController extends Controller
                 'departamento' => $equipo->sede->departamento?->nombre,
                 'municipio' => $equipo->sede->municipio?->nombre,
             ] : null,
-            'mantenimiento_por' => $principal?->nombre ?? 'CST SAS',
+            'mantenimiento_por' => $equipo->hojaVida?->mantenimiento_por ?: ($principal?->nombre ?? 'CST SAS'),
             'telefono_mantenimiento' => $principal?->telefono ?? '',
             'equipo' => new EquipoResource($equipo),
             'hoja_vida' => $equipo->hojaVida,

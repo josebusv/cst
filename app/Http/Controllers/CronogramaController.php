@@ -39,7 +39,9 @@ class CronogramaController extends Controller
             'equipo_id' => 'required|exists:equipos,id',
             'year' => 'required|string|size:4',
             'month' => 'required|string|size:2',
-            'clasificacion_biomedica_id' => 'required|exists:clasificaciones_biomedicas,id',
+            'clasificacion_biomedica_id' => 'nullable|exists:clasificaciones_biomedicas,id',
+            'clase_riesgo' => 'nullable|in:clase_i,clase_iia,clase_iib,clase_iii',
+            'ubicacion' => 'nullable|string|max:255',
             'reporte_id' => 'nullable|exists:reportes,id',
             'estado' => 'nullable|in:pendiente,completado,vencido',
             'periodicidad' => 'nullable|in:mensual,bimestral,trimestral,semestral,anual',
@@ -50,9 +52,15 @@ class CronogramaController extends Controller
             'observaciones' => 'nullable|string',
         ]);
 
-        EmpresaContext::autorizarEmpresa(optional(Equipo::findOrFail($validated['equipo_id'])->sede)->empresa_id);
+        $equipo = Equipo::findOrFail($validated['equipo_id']);
+        EmpresaContext::autorizarEmpresa(optional($equipo->sede)->empresa_id);
 
-        $cronograma = Cronograma::create($validated);
+        // La ubicacion es un atributo del equipo: se ajusta al programar el mantenimiento.
+        if (! empty($validated['ubicacion'])) {
+            $equipo->update(['ubicacion' => $validated['ubicacion']]);
+        }
+
+        $cronograma = Cronograma::create(collect($validated)->except('ubicacion')->toArray());
         $cronograma->load(['equipo', 'tecnico', 'reporte']);
 
         return response()->json([
@@ -76,7 +84,9 @@ class CronogramaController extends Controller
             'equipo_id' => 'sometimes|exists:equipos,id',
             'year' => 'sometimes|string|size:4',
             'month' => 'sometimes|string|size:2',
-            'clasificacion_biomedica_id' => 'sometimes|exists:clasificaciones_biomedicas,id',
+            'clasificacion_biomedica_id' => 'nullable|exists:clasificaciones_biomedicas,id',
+            'clase_riesgo' => 'nullable|in:clase_i,clase_iia,clase_iib,clase_iii',
+            'ubicacion' => 'nullable|string|max:255',
             'reporte_id' => 'nullable|exists:reportes,id',
             'estado' => 'sometimes|in:pendiente,completado,vencido',
             'periodicidad' => 'nullable|in:mensual,bimestral,trimestral,semestral,anual',
@@ -91,7 +101,11 @@ class CronogramaController extends Controller
             $validated['fecha_ejecucion'] = now();
         }
 
-        $cronograma->update($validated);
+        if (! empty($validated['ubicacion'])) {
+            $cronograma->equipo?->update(['ubicacion' => $validated['ubicacion']]);
+        }
+
+        $cronograma->update(collect($validated)->except('ubicacion')->toArray());
         $cronograma->load(['equipo', 'tecnico', 'reporte', 'clasificacionBiomedica']);
 
         return response()->json([
@@ -182,7 +196,7 @@ class CronogramaController extends Controller
         $equipos = Equipo::whereHas('sede', function ($query) use ($empresaId) {
             $query->where('empresa_id', $empresaId);
         })
-            ->with(['sede.departamento', 'sede.municipio', 'clasificacionBiomedica'])
+            ->with(['sede.departamento', 'sede.municipio', 'clasificacionBiomedica', 'hojaVida'])
             ->orderBy('equipo')
             ->get();
 
@@ -205,7 +219,11 @@ class CronogramaController extends Controller
                         'modelo' => $equipo->modelo,
                         'serie' => $equipo->serie,
                         'clasificacion_biomedica' => $equipo->clasificacionBiomedica?->nombre,
-                        'ubicacion' => $this->ubicacionEquipo($equipo),
+                        'clase_riesgo' => $cronogramas->get($equipo->id, collect())
+                            ->pluck('clase_riesgo')->filter()->first()
+                            ?? $equipo->hojaVida?->clase_riesgo,
+                        'ubicacion' => $equipo->ubicacion ?: $this->ubicacionSede($equipo),
+                        'sede' => $this->ubicacionSede($equipo),
                         'cronogramas' => $cronogramas->get($equipo->id, collect())
                             ->map(fn ($c) => [
                                 'month' => $c->month,
@@ -219,7 +237,7 @@ class CronogramaController extends Controller
         ]);
     }
 
-    private function ubicacionEquipo(Equipo $equipo): ?string
+    private function ubicacionSede(Equipo $equipo): ?string
     {
         $sede = $equipo->sede;
         if (!$sede) {

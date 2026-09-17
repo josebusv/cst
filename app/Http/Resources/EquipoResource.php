@@ -40,6 +40,7 @@ class EquipoResource extends JsonResource
                 'id' => $this->clasificacionBiomedica->id,
                 'nombre' => $this->clasificacionBiomedica->nombre,
             ]),
+            'clase_riesgo' => $this->whenLoaded('hojaVida', fn () => $this->hojaVida?->clase_riesgo),
             'sede' => new SedeResource($this->whenLoaded('sede')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

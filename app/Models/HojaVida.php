@@ -14,6 +14,7 @@ class HojaVida extends Model
 
     protected $fillable = [
         'equipo_id',
+        'mantenimiento_por',
         'contacto_responsable',
         'telefono_responsable',
         'especificaciones_tecnicas',

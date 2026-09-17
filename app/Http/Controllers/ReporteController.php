@@ -43,7 +43,15 @@ class ReporteController extends Controller
     {
         $validated = $request->validated();
 
-        $reporte = Reporte::create($validated);
+        $equipo = Equipo::findOrFail($validated['equipo_id']);
+        EmpresaContext::autorizarEmpresa(optional($equipo->sede)->empresa_id);
+
+        // El "Servicio / Area" es un atributo del equipo: se actualiza al guardar el reporte.
+        if (! empty($validated['servicio'])) {
+            $equipo->update(['servicio' => $validated['servicio']]);
+        }
+
+        $reporte = Reporte::create(collect($validated)->except('servicio')->toArray());
         $reporte->load(['equipo.sede.empresa']);
 
         return response()->json([

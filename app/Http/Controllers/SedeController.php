@@ -9,6 +9,7 @@ use App\Models\Empresa;
 use App\Models\Sede;
 use App\Http\Resources\SedeResource;
 use App\Support\EmpresaContext;
+use App\Support\Pagination;
 
 class SedeController extends Controller
 {
@@ -23,7 +24,7 @@ class SedeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $query = Sede::with('empresa');
 
@@ -31,7 +32,7 @@ class SedeController extends Controller
             $query->where('empresa_id', EmpresaContext::empresaId() ?? 0);
         }
 
-        return SedeResource::collection($query->paginate(15));
+        return SedeResource::collection($query->paginate(Pagination::perPage($request)));
     }
 
     /**

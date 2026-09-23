@@ -6,6 +6,7 @@ use App\Models\Ticket;
 use App\Http\Resources\TicketResource;
 use Illuminate\Http\Request;
 use App\Support\EmpresaContext;
+use App\Support\Pagination;
 
 class TicketController extends Controller
 {
@@ -18,7 +19,7 @@ class TicketController extends Controller
         $this->middleware('can:Cambiar Estado Tickets')->only('cambiarEstado');
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $query = Ticket::with(['empresa', 'equipo', 'tecnico', 'creador']);
 
@@ -26,7 +27,7 @@ class TicketController extends Controller
             $query->where('empresa_id', EmpresaContext::empresaId() ?? 0);
         }
 
-        return TicketResource::collection($query->paginate(15));
+        return TicketResource::collection($query->paginate(Pagination::perPage($request)));
     }
 
     public function store(Request $request)
@@ -93,18 +94,18 @@ class TicketController extends Controller
         return response()->json(['message' => 'Ticket eliminado exitosamente']);
     }
 
-    public function ticketsPorEmpresa($empresaId)
+    public function ticketsPorEmpresa(Request $request, $empresaId)
     {
         EmpresaContext::autorizarEmpresa($empresaId);
 
         $tickets = Ticket::where('empresa_id', $empresaId)
             ->with(['equipo', 'tecnico', 'creador'])
-            ->paginate(15);
+            ->paginate(Pagination::perPage($request));
 
         return TicketResource::collection($tickets);
     }
 
-    public function ticketsPorTecnico($userId)
+    public function ticketsPorTecnico(Request $request, $userId)
     {
         $query = Ticket::where('tecnico_id', $userId)
             ->with(['empresa', 'equipo', 'creador']);
@@ -113,7 +114,7 @@ class TicketController extends Controller
             $query->where('empresa_id', EmpresaContext::empresaId() ?? 0);
         }
 
-        return TicketResource::collection($query->paginate(15));
+        return TicketResource::collection($query->paginate(Pagination::perPage($request)));
     }
 
     public function cambiarEstado(Request $request, $id)

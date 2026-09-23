@@ -71,7 +71,8 @@ Route::group([
         Route::get('dashboard/cliente', [DashboardController::class, 'cliente'])->middleware('permission:Ver Dashboard');
 
         // Importación masiva
-        Route::post('importar', [ImportController::class, 'importar']);
+        Route::post('importar', [ImportController::class, 'importar']); // (deprecado: usar /importaciones)
+        Route::post('importaciones', [ImportController::class, 'importar']);
 
         // Usuarios
         Route::apiResource('users', UserController::class);
@@ -105,7 +106,8 @@ Route::group([
         // Cronogramas
 Route::get('cronogramas/calendario', [CronogramaController::class, 'calendario']);
 Route::get('cronogramas/empresa/{empresaId}/anual', [CronogramaController::class, 'anual']);
-Route::post('cronogramas/generar', [CronogramaController::class, 'generar']);
+Route::post('cronogramas/generar', [CronogramaController::class, 'generar']); // (deprecado: usar /cronogramas/generacion)
+Route::post('cronogramas/generacion', [CronogramaController::class, 'generar']);
         Route::apiResource('cronogramas', CronogramaController::class);
         Route::get('cronogramas/empresa/{empresaId}', [CronogramaController::class, 'cronogramasPorEmpresa']);
         Route::get('cronogramas/equipo/{equipoId}', [CronogramaController::class, 'cronogramasPorEquipo']);

@@ -12,6 +12,7 @@ use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use App\Support\EmpresaContext;
+use App\Support\Pagination;
 
 class UserController extends Controller
 {
@@ -26,7 +27,7 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $query = User::with(['sede', 'roles']);
 
@@ -35,7 +36,7 @@ class UserController extends Controller
             $query->whereHas('sede', fn ($q) => $q->where('empresa_id', $empresaId));
         }
 
-        return UserResource::collection($query->paginate(15));
+        return UserResource::collection($query->paginate(Pagination::perPage($request)));
     }
 
     /**
@@ -137,13 +138,13 @@ class UserController extends Controller
     /**
      * List user by Cliente
      */
-    public function usuariosPorEmpresa($empresaId)
+    public function usuariosPorEmpresa(Request $request, $empresaId)
     {
         EmpresaContext::autorizarEmpresa($empresaId);
 
         $usuarios = User::whereHas('sede', function ($query) use ($empresaId) {
             $query->where('empresa_id', $empresaId);
-        })->with(['sede', 'roles'])->paginate(15);
+        })->with(['sede', 'roles'])->paginate(Pagination::perPage($request));
 
         return UserResource::collection($usuarios);
     }

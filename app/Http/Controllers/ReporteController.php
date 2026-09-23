@@ -9,6 +9,7 @@ use App\Models\Equipo;
 use App\Models\Cronograma;
 use App\Http\Resources\ReporteResource;
 use App\Support\EmpresaContext;
+use App\Support\Pagination;
 
 class ReporteController extends Controller
 {
@@ -22,7 +23,7 @@ class ReporteController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         // Trae los reportes con equipo, sede y empresa (cliente), paginados
         $query = Reporte::with([
@@ -34,7 +35,7 @@ class ReporteController extends Controller
             $query->whereHas('equipo.sede', fn ($q) => $q->where('empresa_id', $empresaId));
         }
 
-        return ReporteResource::collection($query->paginate(10));
+        return ReporteResource::collection($query->paginate(Pagination::perPage($request, 10)));
     }
 
     /**
@@ -149,14 +150,14 @@ class ReporteController extends Controller
     /**
      * Obtiene todos los reportes de un equipo específico.
      */
-    public function reportesPorEquipo($equipoId)
+    public function reportesPorEquipo(Request $request, $equipoId)
     {
         $equipo = Equipo::findOrFail($equipoId);
         EmpresaContext::autorizarEmpresa(optional($equipo->sede)->empresa_id);
 
         $reportes = Reporte::where('equipo_id', $equipoId)
             ->with(['equipo.sede.empresa'])
-            ->paginate(10);
+            ->paginate(Pagination::perPage($request, 10));
 
         return ReporteResource::collection($reportes);
     }

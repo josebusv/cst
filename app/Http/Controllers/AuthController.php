@@ -59,7 +59,11 @@ class AuthController extends Controller
         $credentials = request(['email', 'password']);
 
         if (! $token = auth('api')->attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            return response()->json([
+                'message' => 'Credenciales inválidas.',
+                'code' => 'UNAUTHENTICATED',
+                'error' => 'Unauthorized',
+            ], 401);
         }
 
         $user = auth('api')->user();
@@ -129,7 +133,11 @@ class AuthController extends Controller
             $token = auth('api')->refresh();
             return $this->respondWithToken($token);
         } catch (JWTException $e) {
-            return response()->json(['error' => 'No se pudo refrescar el token'], 401);
+            return response()->json([
+                'message' => 'No se pudo refrescar el token.',
+                'code' => 'UNAUTHENTICATED',
+                'error' => 'No se pudo refrescar el token',
+            ], 401);
         }
     }
 

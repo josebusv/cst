@@ -26,7 +26,7 @@ class HojaVidaController extends Controller
             ->where('equipo_id', $equipoId)
             ->firstOrFail();
 
-        return response()->json(['data' => $hojaVida]);
+        return new \App\Http\Resources\HojaVidaResource($hojaVida);
     }
 
     public function update(Request $request, $equipoId)

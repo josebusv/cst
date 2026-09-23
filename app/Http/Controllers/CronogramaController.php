@@ -9,6 +9,7 @@ use App\Http\Resources\CronogramaResource;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Support\EmpresaContext;
+use App\Support\Pagination;
 
 class CronogramaController extends Controller
 {
@@ -21,7 +22,7 @@ class CronogramaController extends Controller
         $this->middleware('can:Generar Cronogramas')->only('generar');
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $query = Cronograma::with(['equipo', 'tecnico', 'reporte']);
 
@@ -30,7 +31,7 @@ class CronogramaController extends Controller
             $query->whereHas('equipo.sede', fn ($q) => $q->where('empresa_id', $empresaId));
         }
 
-        return CronogramaResource::collection($query->paginate(15));
+        return CronogramaResource::collection($query->paginate(Pagination::perPage($request)));
     }
 
     public function store(Request $request)
@@ -133,18 +134,18 @@ class CronogramaController extends Controller
         return response()->json(['message' => 'Cronograma eliminado exitosamente']);
     }
 
-    public function cronogramasPorEmpresa($empresaId)
+    public function cronogramasPorEmpresa(Request $request, $empresaId)
     {
         EmpresaContext::autorizarEmpresa($empresaId);
 
         $cronogramas = Cronograma::whereHas('equipo.sede', function ($query) use ($empresaId) {
             $query->where('empresa_id', $empresaId);
-        })->with(['equipo', 'tecnico', 'reporte'])->paginate(15);
+        })->with(['equipo', 'tecnico', 'reporte'])->paginate(Pagination::perPage($request));
 
         return CronogramaResource::collection($cronogramas);
     }
 
-    public function cronogramasPorEquipo($equipoId)
+    public function cronogramasPorEquipo(Request $request, $equipoId)
     {
         EmpresaContext::autorizarEmpresa(optional(Equipo::findOrFail($equipoId)->sede)->empresa_id);
 
@@ -152,18 +153,18 @@ class CronogramaController extends Controller
             ->with(['tecnico', 'reporte'])
             ->orderBy('year')
             ->orderBy('month')
-            ->paginate(15);
+            ->paginate(Pagination::perPage($request));
 
         return CronogramaResource::collection($cronogramas);
     }
 
-    public function cronogramasPorTecnico($userId)
+    public function cronogramasPorTecnico(Request $request, $userId)
     {
         $cronogramas = Cronograma::where('tecnico_id', $userId)
             ->with(['equipo', 'reporte'])
             ->orderBy('year')
             ->orderBy('month')
-            ->paginate(15);
+            ->paginate(Pagination::perPage($request));
 
         return CronogramaResource::collection($cronogramas);
     }

@@ -13,6 +13,7 @@ use App\Http\Resources\SedeResource;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\DB;
 use App\Support\EmpresaContext;
+use App\Support\Pagination;
 
 class ClienteController extends Controller
 {
@@ -30,7 +31,7 @@ class ClienteController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $query = Cliente::with('sedes');
 
@@ -38,7 +39,7 @@ class ClienteController extends Controller
             $query->where('id', EmpresaContext::empresaId() ?? 0);
         }
 
-        return ClienteResource::collection($query->paginate(15));
+        return ClienteResource::collection($query->paginate(Pagination::perPage($request)));
     }
 
     /**

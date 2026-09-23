@@ -12,6 +12,7 @@ use App\Models\UnidadTecnica;
 use App\Http\Resources\EquipoResource;
 use App\Http\Resources\CronogramaResource;
 use App\Support\EmpresaContext;
+use App\Support\Pagination;
 
 class EquipoController extends Controller
 {
@@ -24,7 +25,7 @@ class EquipoController extends Controller
         $this->middleware('can:Ver Hoja De Vida')->only('hojaVida');
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $query = Equipo::with('sede');
 
@@ -32,7 +33,7 @@ class EquipoController extends Controller
             $query->whereHas('sede', fn ($q) => $q->where('empresa_id', EmpresaContext::empresaId() ?? 0));
         }
 
-        return EquipoResource::collection($query->paginate(15));
+        return EquipoResource::collection($query->paginate(Pagination::perPage($request)));
     }
 
     public function store(StoreEquipoRequest $request)
@@ -87,8 +88,7 @@ class EquipoController extends Controller
     {
         EmpresaContext::autorizarEmpresa($empresaId);
 
-        $perPage = (int) request()->query('per_page', 15);
-        $perPage = max(1, min($perPage, 100));
+        $perPage = Pagination::perPage(request(), 15);
 
         $equipos = Equipo::whereHas('sede', function ($query) use ($empresaId) {
             $query->where('empresa_id', $empresaId);

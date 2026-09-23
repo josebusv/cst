@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Sede extends Model
 {
@@ -23,27 +25,27 @@ class Sede extends Model
         'municipio_id',
     ];
 
-    public function empresa()
+    public function empresa(): BelongsTo
     {
         return $this->belongsTo(Empresa::class);
     }
 
-    public function users()
+    public function users(): HasMany
     {
         return $this->hasMany(User::class);
     }
 
-    public function departamento()
+    public function departamento(): BelongsTo
     {
         return $this->belongsTo(Departamento::class);
     }
 
-    public function municipio()
+    public function municipio(): BelongsTo
     {
         return $this->belongsTo(Municipio::class);
     }
 
-    public function equipos()
+    public function equipos(): HasMany
     {
         return $this->hasMany(Equipo::class);
     }

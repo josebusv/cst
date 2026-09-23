@@ -58,7 +58,10 @@ class AuthController extends Controller
     {
         $credentials = request(['email', 'password']);
 
-        if (! $token = auth('api')->attempt($credentials)) {
+        /** @var \Tymon\JWTAuth\JWTGuard $auth */
+        $auth = auth('api');
+
+        if (! $token = $auth->attempt($credentials)) {
             return response()->json([
                 'message' => 'Credenciales inválidas.',
                 'code' => 'UNAUTHENTICATED',
@@ -66,7 +69,7 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $user = auth('api')->user();
+        $user = $auth->user();
         $empresaTipo = optional(optional($user->sede)->empresa)->tipo;
 
         if ($empresaTipo === 'cliente' && !$user->hasRole('Cliente')) {
@@ -113,8 +116,10 @@ class AuthController extends Controller
     public function logout()
     {
         try {
-            auth('api')->logout();
-            auth('api')->invalidate(true);
+            /** @var \Tymon\JWTAuth\JWTGuard $auth */
+            $auth = auth('api');
+            $auth->logout();
+            $auth->invalidate(true);
         } catch (JWTException $e) {
             // El token ya no es válido; igualmente se cierra sesión en el cliente.
         }
@@ -130,7 +135,10 @@ class AuthController extends Controller
     public function refresh()
     {
         try {
-            $token = auth('api')->refresh();
+            /** @var \Tymon\JWTAuth\JWTGuard $auth */
+            $auth = auth('api');
+            /** @var string $token */
+            $token = $auth->refresh();
             return $this->respondWithToken($token);
         } catch (JWTException $e) {
             return response()->json([
@@ -150,13 +158,15 @@ class AuthController extends Controller
      */
     protected function respondWithToken($token)
     {
-        $user = auth('api')->user()->load('sede.empresa');
+        /** @var \Tymon\JWTAuth\JWTGuard $auth */
+        $auth = auth('api');
+        $user = $auth->user()->load('sede.empresa');
         $empresaTipo = optional(optional($user->sede)->empresa)->tipo;
 
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60,
+            'expires_in' => $auth->factory()->getTTL() * 60,
             'user' => new UserResource($user),
             'empresa_tipo' => $empresaTipo,
             'empresa_id' => optional(optional($user->sede)->empresa)->id, // Retorna el ID de la empresa

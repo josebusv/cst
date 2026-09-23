@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use \Illuminate\Database\Eloquent\SoftDeletes;
 
 class Empresa extends Model
@@ -52,17 +54,17 @@ class Empresa extends Model
         }
     }
 
-    public function sedes()
+    public function sedes(): HasMany
     {
         return $this->hasMany(Sede::class, 'empresa_id');
     }
 
-    public function tickets()
+    public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class);
     }
 
-    public function tecnicos()
+    public function tecnicos(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'cliente_tecnico', 'empresa_id', 'user_id');
     }

@@ -8,11 +8,13 @@ parameters:
 
     level: 5
 
+    # La certeza de tipos derivada de PHPDoc (p. ej. desde el esquema) no siempre
+    # refleja el runtime; no la tratamos como garantia.
+    treatPhpDocTypesAsCertain: false
+
     parallel:
         maximumNumberOfProcesses: 4
 
     ignoreErrors:
-        - identifier: missingType.iterableValue
-        - identifier: missingType.generics
-        - '#Method .* has no return type specified.#'
+        # Atributos dinamicos de Eloquent.
         - '#Access to an undefined property#'

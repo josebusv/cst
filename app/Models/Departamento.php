@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Departamento extends Model
 {
@@ -11,7 +12,7 @@ class Departamento extends Model
 
     protected $fillable = ['nombre', 'codigo'];
 
-    public function municipios()
+    public function municipios(): HasMany
     {
         return $this->hasMany(Municipio::class);
     }

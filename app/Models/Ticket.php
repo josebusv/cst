@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Ticket extends Model
@@ -26,22 +27,22 @@ class Ticket extends Model
         'fecha_cierre' => 'datetime',
     ];
 
-    public function empresa()
+    public function empresa(): BelongsTo
     {
         return $this->belongsTo(Empresa::class);
     }
 
-    public function equipo()
+    public function equipo(): BelongsTo
     {
         return $this->belongsTo(Equipo::class);
     }
 
-    public function tecnico()
+    public function tecnico(): BelongsTo
     {
         return $this->belongsTo(User::class, 'tecnico_id');
     }
 
-    public function creador()
+    public function creador(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Cronograma extends Model
@@ -31,22 +32,22 @@ class Cronograma extends Model
         'fecha_ejecucion' => 'date',
     ];
 
-    public function equipo()
+    public function equipo(): BelongsTo
     {
         return $this->belongsTo(Equipo::class);
     }
 
-    public function clasificacionBiomedica()
+    public function clasificacionBiomedica(): BelongsTo
     {
         return $this->belongsTo(ClasificacionBiomedica::class, 'clasificacion_biomedica_id');
     }
 
-    public function reporte()
+    public function reporte(): BelongsTo
     {
         return $this->belongsTo(Reporte::class);
     }
 
-    public function tecnico()
+    public function tecnico(): BelongsTo
     {
         return $this->belongsTo(User::class, 'tecnico_id');
     }

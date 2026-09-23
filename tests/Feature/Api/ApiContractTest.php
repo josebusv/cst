@@ -64,7 +64,9 @@ class ApiContractTest extends TestCase
         $this->actingAs($this->actor, 'api')
             ->getJson('/api/auth/equipos/999999')
             ->assertStatus(404)
-            ->assertJsonPath('code', 'NOT_FOUND');
+            ->assertJsonPath('code', 'NOT_FOUND')
+            // No debe filtrar el nombre interno del modelo.
+            ->assertJsonPath('error', null);
     }
 
     public function test_per_page_se_respeta_y_se_acota(): void

@@ -122,7 +122,7 @@ class ImportController extends Controller
                             ['nombre' => $munNombre],
                             [
                                 'departamento_id' => $departamento->id,
-                                'codigo' => $departamento->codigo . str_pad(Municipio::max('id') + 1, 3, '0', STR_PAD_LEFT),
+                                'codigo' => $departamento->codigo . str_pad((string) (Municipio::max('id') + 1), 3, '0', STR_PAD_LEFT),
                             ]
                         );
                     }

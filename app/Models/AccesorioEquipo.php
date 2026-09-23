@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AccesorioEquipo extends Model
 {
@@ -17,7 +18,7 @@ class AccesorioEquipo extends Model
 
     protected $table = 'accesorio_equipo';
 
-    public function equipo()
+    public function equipo(): BelongsTo
     {
         return $this->belongsTo(Equipo::class);
     }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class HojaVida extends Model
@@ -42,17 +43,17 @@ class HojaVida extends Model
         'accesorios' => 'array',
     ];
 
-    public function equipo()
+    public function equipo(): BelongsTo
     {
         return $this->belongsTo(Equipo::class);
     }
 
-    public function realizoUser()
+    public function realizoUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'firma_realizo_user_id');
     }
 
-    public function aproboUser()
+    public function aproboUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'firma_aprobo_user_id');
     }

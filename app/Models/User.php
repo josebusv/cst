@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Auth\Passwords\CanResetPassword;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 // use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Spatie\Permission\Traits\HasRoles;
@@ -75,12 +79,12 @@ class User extends Authenticatable implements JWTSubject
         return [];
     }
 
-    public function sede()
+    public function sede(): BelongsTo
     {
         return $this->belongsTo(Sede::class, 'sede_id', 'id');
     }
 
-    public function empresa()
+    public function empresa(): HasOneThrough
     {
         return $this->hasOneThrough(
             Empresa::class,
@@ -92,17 +96,17 @@ class User extends Authenticatable implements JWTSubject
         );
     }
 
-    public function clientes()
+    public function clientes(): BelongsToMany
     {
         return $this->belongsToMany(Empresa::class, 'cliente_tecnico', 'user_id', 'empresa_id');
     }
 
-    public function ticketsAsignados()
+    public function ticketsAsignados(): HasMany
     {
         return $this->hasMany(Ticket::class, 'tecnico_id');
     }
 
-    public function cronogramasAsignados()
+    public function cronogramasAsignados(): HasMany
     {
         return $this->hasMany(Cronograma::class, 'tecnico_id');
     }

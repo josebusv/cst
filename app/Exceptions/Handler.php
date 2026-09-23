@@ -43,11 +43,11 @@ class Handler extends ExceptionHandler
             }
 
             if ($exception instanceof ModelNotFoundException) {
-                return $this->errorResponse('Recurso no encontrado', 'NOT_FOUND', 404, $exception->getMessage());
+                return $this->errorResponse('Recurso no encontrado', 'NOT_FOUND', 404, null);
             }
 
             if ($exception instanceof NotFoundHttpException) {
-                return $this->errorResponse('Ruta no encontrada', 'NOT_FOUND', 404, $exception->getMessage());
+                return $this->errorResponse('Ruta no encontrada', 'NOT_FOUND', 404, null);
             }
 
             if ($exception instanceof MethodNotAllowedHttpException) {

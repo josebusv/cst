@@ -21,6 +21,7 @@ class HojaVida extends Model
         'fuentes_alimentacion',
         'sistemas_consulta',
         'accesorios',
+        'otros_consumibles',
         'uso',
         'tipo_dispositivo',
         'clase_riesgo',

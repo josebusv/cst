@@ -4,6 +4,7 @@ namespace Tests\Feature\Api;
 
 use App\Models\Empresa;
 use App\Models\Equipo;
+use App\Models\Consumible;
 use App\Models\Sede;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -66,6 +67,33 @@ class IncidenciasTest extends TestCase
             ->getJson('/api/auth/equipos/' . $this->equipo->id . '/hoja-vida')
             ->assertStatus(200)
             ->assertJsonPath('data.mantenimiento_por', 'BioServicios SAS');
+    }
+
+    public function test_consumibles_y_otros_se_guardan(): void
+    {
+        $actor = $this->actor();
+        $consumible = Consumible::create(['nombre' => 'Bombillos']);
+
+        $this->actingAs($actor, 'api')
+            ->putJson('/api/auth/equipos/' . $this->equipo->id . '/hoja-vida', [
+                'consumibles' => [$consumible->id],
+                'otros_consumibles' => 'Guantes de nitrilo',
+            ])
+            ->assertStatus(200);
+
+        $this->assertDatabaseHas('consumible_equipo', [
+            'equipo_id' => $this->equipo->id,
+            'consumible_id' => $consumible->id,
+        ]);
+        $this->assertDatabaseHas('hojas_vida', [
+            'equipo_id' => $this->equipo->id,
+            'otros_consumibles' => 'Guantes de nitrilo',
+        ]);
+
+        $this->actingAs($actor, 'api')
+            ->getJson('/api/auth/equipos/' . $this->equipo->id . '/hoja-vida')
+            ->assertStatus(200)
+            ->assertJsonPath('data.hoja_vida.otros_consumibles', 'Guantes de nitrilo');
     }
 
     public function test_bug02_servicio_del_reporte_actualiza_el_equipo(): void

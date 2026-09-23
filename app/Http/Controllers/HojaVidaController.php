@@ -50,6 +50,9 @@ class HojaVidaController extends Controller
             'fuentes_alimentacion' => 'nullable|array',
             'sistemas_consulta' => 'nullable|array',
             'accesorios' => 'nullable|array',
+            'otros_consumibles' => 'nullable|string|max:255',
+            'consumibles' => 'nullable|array',
+            'consumibles.*' => 'integer|exists:consumibles,id',
             'uso' => 'nullable|in:diagnostico,tratamiento,laboratorio,rehabilitacion,esterilizacion,otro',
             'tipo_dispositivo' => 'nullable|in:activo,activo_terapeutico,combinado,dm_implantable,dm_invasivo,dm_invasivo_qx',
             'clase_riesgo' => 'nullable|in:clase_i,clase_iia,clase_iib,clase_iii',
@@ -62,7 +65,12 @@ class HojaVidaController extends Controller
             'tipo_hoja' => 'nullable|in:electronica,endoscopia',
         ]);
 
-        $hojaVida->update(collect($validated)->except('tipo_hoja')->toArray());
+        $hojaVida->update(collect($validated)->except(['tipo_hoja', 'consumibles'])->toArray());
+
+        // Los consumibles viven en la tabla pivote del equipo.
+        if (array_key_exists('consumibles', $validated)) {
+            $hojaVida->equipo->consumibles()->sync($validated['consumibles'] ?? []);
+        }
 
         if (!empty($validated['tipo_hoja'])) {
             $hojaVida->equipo->update(['tipo_hoja' => $validated['tipo_hoja']]);

@@ -21,7 +21,7 @@ class EmpresaFactory extends Factory
         return [
             'nit' => $this->faker->unique()->numerify('#########'),
             'nombre' => $this->faker->company,
-            'logo' => $this->faker->imageUrl(640, 480, 'business', true, 'Faker'),
+            'logo' => null,
             'tipo' => 'cliente',
         ];
     }

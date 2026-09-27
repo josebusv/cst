@@ -177,8 +177,10 @@ Aplicar SOLO el punto 1 en el servidor (el punto 2 va en el build del front):
 php artisan db:seed --class="Database\Seeders\PermissionsDemoSeeder" --force
 ```
 
-> Scripts incluidos (requieren SSH): `cst/deploy-preprod.sh` y `front_cst/deploy-preprod.sh`
-> (o `npm run deploy:preprod`). Configura `deploy.local.sh` con `SSH_HOST` y `SSH_PATH`.
+> Scripts incluidos (requieren SSH): `cst/deploy-preprod.sh`, `cst/deploy-prod.sh`,
+> `front_cst/deploy-preprod.sh` y `front_cst/deploy-prod.sh`
+> (o `npm run deploy:preprod` / `npm run deploy:prod`). Configura `deploy.local.sh` con
+> `SSH_HOST` y `SSH_PATH` (ver sección 11).
 
 ### Subir por zip: incluir TODAS las carpetas
 Un zip incompleto (falta `app/`, `config/`, `routes/`, `bootstrap/`, `vendor/`, etc.) hace que la
@@ -213,4 +215,107 @@ curl -s -X PUT https://apitest.cst-colombia.com.co/api/auth/equipos/<ID>/hoja-vi
   -d '{"firma_realizo":"data:image/png;base64,iVBORw0KGgo...","nombre_realizo":"X"}' -w "\n%{http_code}\n"
 #   -> 200
 ```
+
+## 11. Comandos de despliegue (preproduccion y produccion)
+
+> Requiere acceso SSH. En cada repo crea `deploy.local.sh` (no versionado) con:
+> ```bash
+> SSH_HOST="u123456789@cst-colombia.com.co"
+> SSH_PATH="/home/u123456789/domains/<dominio>/<carpeta>"
+> ```
+> Los scripts asumen que el codigo se actualiza con `git pull --ff-only` en el servidor.
+
+### 11.1 Backend - PREPRODUCCION (apitest.cst-colombia.com.co)
+
+```bash
+cd cst
+./deploy-preprod.sh                        # usa deploy.local.sh
+./deploy-preprod.sh usuario@host /ruta/apitest.cst-colombia.com.co/cst
+```
+
+Manual por SSH:
+
+```bash
+ssh usuario@host "cd /ruta/apitest.cst-colombia.com.co/cst && \
+  git pull --ff-only && \
+  composer install --no-dev --optimize-autoloader && \
+  php artisan migrate --force && \
+  php artisan db:seed --class='Database\Seeders\PermissionsDemoSeeder' --force && \
+  php artisan optimize"
+```
+
+### 11.2 Backend - PRODUCCION (api.cst-colombia.com.co)
+
+```bash
+cd cst
+./deploy-prod.sh                           # usa deploy.local.sh
+./deploy-prod.sh usuario@host /ruta/api.cst-colombia.com.co/cst
+```
+
+Manual por SSH:
+
+```bash
+ssh usuario@host "cd /ruta/api.cst-colombia.com.co/cst && \
+  git pull --ff-only && \
+  composer install --no-dev --optimize-autoloader && \
+  php artisan migrate --force && \
+  php artisan db:seed --class='Database\Seeders\UnidadesTecnicasSeeder' --force && \
+  php artisan db:seed --class='Database\Seeders\ClasificacionBiomedicaSeeder' --force && \
+  (php artisan storage:link || true) && \
+  php artisan optimize"
+```
+
+> Los seeders de catalogos usan `firstOrCreate` (idempotentes). El backend prod **no** re-siembra
+> `PermissionsDemoSeeder`; si necesitas tocar roles en prod, aplica la seccion 10.
+
+### 11.3 Frontend - PREPRODUCCION (test.cst-colombia.com.co)
+
+```bash
+cd front_cst
+npm run deploy:preprod                     # tests + build:staging + rsync
+bash deploy-preprod.sh usuario@host /ruta/test.cst-colombia.com.co/public_html
+```
+
+Manual:
+
+```bash
+npm ci
+npx ng test --watch=false --browsers=ChromeHeadless
+npm run build:staging
+rsync -avz --delete dist/coreui-free-angular-admin-template/browser/ \
+  usuario@host:/ruta/test.cst-colombia.com.co/public_html/
+```
+
+### 11.4 Frontend - PRODUCCION (cst-colombia.com.co)
+
+```bash
+cd front_cst
+npm run deploy:prod                        # tests + lint + build:prod + rsync
+bash deploy-prod.sh usuario@host /ruta/cst-colombia.com.co/public_html
+```
+
+Manual:
+
+```bash
+npm ci
+npx ng test --watch=false --browsers=ChromeHeadless
+npm run lint
+npm run build:prod
+rsync -avz --delete dist/coreui-free-angular-admin-template/browser/ \
+  usuario@host:/ruta/cst-colombia.com.co/public_html/
+```
+
+### 11.5 Post-deploy (backend)
+
+Tras subir codigo por zip/rsync o por script, en el servidor:
+
+```bash
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+php artisan cache:clear
+php artisan optimize
+```
+
+Verificacion rapida (ver seccion 4): login POST 200, header `X-Request-Id`, `/artisan` responde 404.
 

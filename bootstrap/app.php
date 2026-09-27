@@ -1,55 +1,123 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| Create The Application
-|--------------------------------------------------------------------------
-|
-| The first thing we will do is create a new Laravel application instance
-| which serves as the "glue" for all the components of Laravel, and is
-| the IoC container for the system binding all of the various parts.
-|
-*/
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
-$app = new Illuminate\Foundation\Application(
-    $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
-);
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+    )
+    ->withMiddleware(function (Middleware $middleware) {
+        // Cabeceras de seguridad (CSP, nosniff, etc.) y X-Request-Id en todas las peticiones.
+        $middleware->prepend(\App\Http\Middleware\SecurityHeaders::class);
+        $middleware->append(\App\Http\Middleware\AddRequestId::class);
 
-/*
-|--------------------------------------------------------------------------
-| Bind Important Interfaces
-|--------------------------------------------------------------------------
-|
-| Next, we need to bind some important interfaces into the container so
-| we will be able to resolve them when needed. The kernels serve the
-| incoming requests to this application from both the web and CLI.
-|
-*/
+        // No recortar espacios en los campos de contraseña.
+        $middleware->trimStrings(except: [
+            'current_password',
+            'password',
+            'password_confirmation',
+        ]);
 
-$app->singleton(
-    Illuminate\Contracts\Http\Kernel::class,
-    App\Http\Kernel::class
-);
+        // Grupo "api": aplica el limiter "api" (throttle:api) + SubstituteBindings.
+        // Equivale al antiguo grupo 'api' del Http\Kernel.
+        $middleware->throttleApi();
 
-$app->singleton(
-    Illuminate\Contracts\Console\Kernel::class,
-    App\Console\Kernel::class
-);
+        // Alias propios + Spatie Permission v6 (namespace singular "Middleware").
+        $middleware->alias([
+            'auth' => \App\Http\Middleware\Authenticate::class,
+            'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+        ]);
+    })
+    ->withExceptions(function (Exceptions $exceptions) {
+        // Contrato de error uniforme para la API: { message, code, error } (+ errors en validación).
+        $exceptions->render(function (Throwable $e, Request $request) {
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
+                return null;
+            }
 
-$app->singleton(
-    Illuminate\Contracts\Debug\ExceptionHandler::class,
-    App\Exceptions\Handler::class
-);
+            $json = function (string $message, string $code, int $status, ?string $error = null, array $headers = []) {
+                return response()->json([
+                    'message' => $message,
+                    'code' => $code,
+                    'error' => $error,
+                ], $status, $headers);
+            };
 
-/*
-|--------------------------------------------------------------------------
-| Return The Application
-|--------------------------------------------------------------------------
-|
-| This script returns the application instance. The instance is given to
-| the calling script so we can separate the building of the instances
-| from the actual running of the application and sending responses.
-|
-*/
+            $codeForStatus = function (int $status): string {
+                return match ($status) {
+                    400 => 'BAD_REQUEST',
+                    401 => 'UNAUTHENTICATED',
+                    403 => 'FORBIDDEN',
+                    404 => 'NOT_FOUND',
+                    405 => 'METHOD_NOT_ALLOWED',
+                    409 => 'CONFLICT',
+                    422 => 'VALIDATION_ERROR',
+                    429 => 'TOO_MANY_REQUESTS',
+                    default => $status >= 500 ? 'SERVER_ERROR' : 'HTTP_ERROR',
+                };
+            };
 
-return $app;
+            if ($e instanceof \Illuminate\Auth\AuthenticationException) {
+                return $json('No autenticado.', 'UNAUTHENTICATED', 401, $e->getMessage());
+            }
+
+            if ($e instanceof \Illuminate\Validation\ValidationException) {
+                return response()->json([
+                    'message' => 'Datos inválidos',
+                    'code' => 'VALIDATION_ERROR',
+                    'error' => 'Datos inválidos',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+
+            if ($e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
+                return $json('Recurso no encontrado', 'NOT_FOUND', 404, null);
+            }
+
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
+                return $json('Ruta no encontrada', 'NOT_FOUND', 404, null);
+            }
+
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException) {
+                return $json('Método HTTP no permitido', 'METHOD_NOT_ALLOWED', 405, $e->getMessage());
+            }
+
+            if ($e instanceof \Illuminate\Auth\Access\AuthorizationException
+                || $e instanceof \Spatie\Permission\Exceptions\UnauthorizedException) {
+                return $json(
+                    'No tienes los permisos necesarios para acceder a este recurso.',
+                    'FORBIDDEN',
+                    403,
+                    $e->getMessage()
+                );
+            }
+
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpException) {
+                $status = $e->getStatusCode();
+
+                return $json(
+                    $e->getMessage() ?: 'Solicitud rechazada',
+                    $codeForStatus($status),
+                    $status,
+                    $e->getMessage(),
+                    $e->getHeaders()
+                );
+            }
+
+            return $json(
+                'Error interno del servidor',
+                'SERVER_ERROR',
+                500,
+                config('app.debug') ? $e->getMessage() : null
+            );
+        });
+    })->create();

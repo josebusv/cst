@@ -69,6 +69,28 @@ class IncidenciasTest extends TestCase
             ->assertJsonPath('data.mantenimiento_por', 'BioServicios SAS');
     }
 
+    public function test_otro_uso_se_guarda_y_se_devuelve(): void
+    {
+        $actor = $this->actor();
+
+        $this->actingAs($actor, 'api')
+            ->putJson('/api/auth/equipos/' . $this->equipo->id . '/hoja-vida', [
+                'uso' => 'otro',
+                'otro_uso' => 'Investigación y docencia',
+            ])
+            ->assertStatus(200);
+
+        $this->assertDatabaseHas('hojas_vida', [
+            'equipo_id' => $this->equipo->id,
+            'otro_uso' => 'Investigación y docencia',
+        ]);
+
+        $this->actingAs($actor, 'api')
+            ->getJson('/api/auth/equipos/' . $this->equipo->id . '/hoja-vida')
+            ->assertStatus(200)
+            ->assertJsonPath('data.hoja_vida.otro_uso', 'Investigación y docencia');
+    }
+
     public function test_consumibles_y_otros_se_guardan(): void
     {
         $actor = $this->actor();

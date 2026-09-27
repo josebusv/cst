@@ -24,6 +24,7 @@ class HojaVida extends Model
         'accesorios',
         'otros_consumibles',
         'uso',
+        'otro_uso',
         'tipo_dispositivo',
         'clase_riesgo',
         'firma_realizo_user_id',

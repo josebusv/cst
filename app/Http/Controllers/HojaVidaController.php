@@ -54,6 +54,7 @@ class HojaVidaController extends Controller
             'consumibles' => 'nullable|array',
             'consumibles.*' => 'integer|exists:consumibles,id',
             'uso' => 'nullable|in:diagnostico,tratamiento,laboratorio,rehabilitacion,esterilizacion,otro',
+            'otro_uso' => 'nullable|string|max:255',
             'tipo_dispositivo' => 'nullable|in:activo,activo_terapeutico,combinado,dm_implantable,dm_invasivo,dm_invasivo_qx',
             'clase_riesgo' => 'nullable|in:clase_i,clase_iia,clase_iib,clase_iii',
             'firma_realizo' => 'nullable|string',

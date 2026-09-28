@@ -226,32 +226,37 @@ class CronogramaController extends Controller
             ->get()
             ->groupBy('equipo_id');
 
+        $equiposData = [];
+        foreach ($equipos as $equipo) {
+            /** @var \Illuminate\Database\Eloquent\Collection<int, Cronograma> $grupo */
+            $grupo = $cronogramas->get($equipo->id) ?? new \Illuminate\Database\Eloquent\Collection();
+
+            $equiposData[] = [
+                'id' => $equipo->id,
+                'equipo' => $equipo->equipo,
+                'marca' => $equipo->marca,
+                'modelo' => $equipo->modelo,
+                'serie' => $equipo->serie,
+                'clasificacion_biomedica' => $equipo->clasificacionBiomedica?->nombre,
+                'clase_riesgo' => $grupo->pluck('clase_riesgo')->filter()->first()
+                    ?? data_get($equipo, 'hojaVida.clase_riesgo'),
+                'ubicacion' => $equipo->ubicacion ?: $this->ubicacionSede($equipo),
+                'sede' => $this->ubicacionSede($equipo),
+                'cronogramas' => $grupo
+                    ->map(fn (Cronograma $c) => [
+                        'month' => $c->month,
+                        'estado' => $c->estado,
+                        'tipo' => $c->tipo ?? 'mantenimiento',
+                        'periodicidad' => $c->periodicidad,
+                    ])->values(),
+            ];
+        }
+
         return response()->json([
             'data' => [
                 'empresa' => ['id' => $empresa->id, 'nombre' => $empresa->nombre],
                 'year' => $request->year,
-                'equipos' => $equipos->map(function ($equipo) use ($cronogramas) {
-                    return [
-                        'id' => $equipo->id,
-                        'equipo' => $equipo->equipo,
-                        'marca' => $equipo->marca,
-                        'modelo' => $equipo->modelo,
-                        'serie' => $equipo->serie,
-                        'clasificacion_biomedica' => $equipo->clasificacionBiomedica?->nombre,
-                        'clase_riesgo' => $cronogramas->get($equipo->id, collect())
-                            ->pluck('clase_riesgo')->filter()->first()
-                            ?? $equipo->hojaVida?->clase_riesgo,
-                        'ubicacion' => $equipo->ubicacion ?: $this->ubicacionSede($equipo),
-                        'sede' => $this->ubicacionSede($equipo),
-                        'cronogramas' => $cronogramas->get($equipo->id, collect())
-                            ->map(fn ($c) => [
-                                'month' => $c->month,
-                                'estado' => $c->estado,
-                                'tipo' => $c->tipo ?? 'mantenimiento',
-                                'periodicidad' => $c->periodicidad,
-                            ])->values(),
-                    ];
-                })->values(),
+                'equipos' => $equiposData,
             ],
         ]);
     }

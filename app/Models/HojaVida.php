@@ -44,6 +44,9 @@ class HojaVida extends Model
         'accesorios' => 'array',
     ];
 
+    /**
+     * @return BelongsTo<Equipo, $this>
+     */
     public function equipo(): BelongsTo
     {
         return $this->belongsTo(Equipo::class);

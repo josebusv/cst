@@ -146,8 +146,8 @@ class EquipoController extends Controller
                 'departamento' => $equipo->sede->departamento?->nombre,
                 'municipio' => $equipo->sede->municipio?->nombre,
             ] : null,
-            'mantenimiento_por' => $equipo->hojaVida?->mantenimiento_por ?: ($principal?->nombre ?? 'CST SAS'),
-            'telefono_mantenimiento' => $principal?->telefono ?? '',
+            'mantenimiento_por' => data_get($equipo, 'hojaVida.mantenimiento_por') ?: (data_get($principal, 'nombre') ?? 'CST SAS'),
+            'telefono_mantenimiento' => data_get($principal, 'telefono') ?? '',
             'equipo' => new EquipoResource($equipo),
             'hoja_vida' => $equipo->hojaVida,
             'consumibles' => $equipo->consumibles,
@@ -170,7 +170,7 @@ class EquipoController extends Controller
                 ->orderBy('nombre')
                 ->get()
                 ->groupBy('categoria')
-                ->map(fn ($items) => $items->map(fn ($u) => [
+                ->map(fn (\Illuminate\Database\Eloquent\Collection $items) => $items->map(fn (UnidadTecnica $u) => [
                     'id' => $u->id,
                     'nombre' => $u->nombre,
                     'simbolo' => $u->simbolo,

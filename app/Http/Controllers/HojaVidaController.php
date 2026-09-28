@@ -132,7 +132,7 @@ class HojaVidaController extends Controller
                 ->orderBy('nombre')
                 ->get()
                 ->groupBy('categoria')
-                ->map(fn ($items) => $items->map(fn ($u) => [
+                ->map(fn (\Illuminate\Database\Eloquent\Collection $items) => $items->map(fn (\App\Models\UnidadTecnica $u) => [
                     'id' => $u->id,
                     'nombre' => $u->nombre,
                     'simbolo' => $u->simbolo,

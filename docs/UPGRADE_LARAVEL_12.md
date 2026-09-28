@@ -1,5 +1,9 @@
 # Upgrade Laravel 10 -> 12 LTS
 
+> **Estado: EJECUTADO** en la rama `chore/laravel-12` (framework **12.69.2**).
+> Verificacion: **53/53 tests**, **PHPStan 0 errores**, `composer audit --no-dev` limpio,
+> login **200** y contrato de error `{message, code, error}` intacto. Detalle en "Verificacion".
+
 ## Por que
 Laravel 10 esta **EOL** (sin parches de seguridad) y sigue aportando 3 avisos de
 `composer audit` que no se pueden corregir sin cambiar de version mayor.
@@ -94,12 +98,23 @@ composer audit --no-dev
 ```
 
 ## Verificacion
-- [ ] `php artisan test` verde (37 tests).
-- [ ] `composer audit --no-dev` sin avisos (o allowlist documentada).
-- [ ] Login/logout/refresh JWT.
-- [ ] Rutas con `can:`/`role:` responden 403 (no 500).
-- [ ] `php artisan route:list` sin errores.
-- [ ] Frontend (staging) autentica y CRUD de equipos/reportes/hoja de vida.
+- [x] `php artisan test` verde (**53** tests, 145 aserciones).
+- [x] `composer audit --no-dev` sin avisos.
+- [x] Login JWT responde 200. (Logout/refresh: verificar manualmente en staging.)
+- [x] Rutas con `can:`/`role:` responden 403 (no 500) — cubierto por `SecurityPhase3Test`/`MultiTenantAccessTest`.
+- [x] `php artisan route:list` sin errores (96 lineas).
+- [ ] Frontend (staging) autentica y CRUD de equipos/reportes/hoja de vida (frontend sin cambios; contrato verificado).
+
+## Resultado de la ejecucion
+- Dependencias: `laravel/framework ^12.0`, `spatie/laravel-permission ^6.0`, `collision ^8.6`,
+  `phpunit ^11.5`, `larastan ^3.0`; se quitaron `laravel/sanctum`, `doctrine/dbal` y
+  `spatie/laravel-ignition`; `php ^8.2`.
+- Esqueleto: `bootstrap/app.php` reescrito (`withRouting`/`withMiddleware`/`withExceptions`) y
+  nuevo `bootstrap/providers.php`; eliminados `Http/Kernel.php`, `Console/Kernel.php`,
+  `Providers/RouteServiceProvider.php`, `Exceptions/Handler.php` y `config/sanctum.php`.
+- Spatie v6: la migracion `create_permission_tables` se actualizo a claves de pivote por config
+  (`PermissionRegistrar::$pivotPermission/$pivotRole` ya no existen).
+- Larastan v3 destapo 8 errores de tipos; corregidos (PHPStan en 0).
 
 ## Rollback
 - `git checkout feature/portal-cliente` + `composer install` + `php artisan optimize`.

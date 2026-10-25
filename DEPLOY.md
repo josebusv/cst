@@ -3,14 +3,14 @@
 Guía para el backend (`cst`) y el frontend (`front_cst`).
 Guía específica del frontend: `front_cst/DEPLOY.md`.
 
-> Última revisión: 2026-10-24 (tras el upgrade a Laravel 12 en la rama `chore/laravel-12`).
+> Última revisión: 2026-10-24 (upgrade a Laravel 12 **mergeado y pusheado a `main`**).
 
 ## 0. Requisitos y estado de versiones
 
 | Componente | Requisito | Nota |
 |---|---|---|
-| PHP (servidor) | >= 8.2 | Servidor actual: 8.2.33. La rama `main` (Laravel 10) funciona con >= 8.1 |
-| Laravel | `main`: 10.x · `chore/laravel-12`: 12.x | Upgrade a 12 **ejecutado** en la rama `chore/laravel-12`, **pendiente de merge/push a `main`** (ver `docs/UPGRADE_LARAVEL_12.md`) |
+| PHP (servidor) | >= 8.2 | Servidor actual: 8.2.33 ✅ |
+| Laravel | 12.x en `main` | Upgrade ejecutado en `chore/laravel-12` y mergeado (fast-forward) a `main` el 2026-10-24 (ver `docs/UPGRADE_LARAVEL_12.md`) |
 | Composer | 2.x | En el servidor: `composer install --no-dev --optimize-autoloader` |
 | MySQL/MariaDB | Según plan Hostinger | Credenciales en `.env` (`DB_*`) |
 | Node.js (build front) | ^20.19.0 \|\| ^22.12.0 \|\| ^24.0.0 | npm >= 9 |
@@ -19,6 +19,10 @@ Guía específica del frontend: `front_cst/DEPLOY.md`.
 > Los scripts de deploy actualizan el código con `git pull --ff-only` **sobre la rama que tenga
 > checked out el servidor** (normalmente `main`). Verifica la rama antes de desplegar:
 > `ssh usuario@host "cd /ruta/cst && git branch --show-current"`.
+>
+> ⚠️ El **primer deploy de `main` con Laravel 12** en cada servidor (preprod y prod) despliega el
+> upgrade completo: confirmar PHP >= 8.2 (`php -v`), hacer **backup de BD** antes del `migrate`,
+> y verificar login + `/up` después (secciones 4 y 8).
 
 ## 1. Configuración de producción (`.env`)
 
@@ -104,7 +108,7 @@ O usar el script existente: `bash deploy.sh <usuario@host> <ruta_public_html>`.
 
 ## 4. Verificación post-despliegue
 
-- `GET https://api…/up` responde 200 (health check; solo en la rama Laravel 12, `bootstrap/app.php`).
+- `GET https://api…/up` responde 200 (health check definido en `bootstrap/app.php`).
 - `GET https://api…/api/auth/login` responde (POST con credenciales válidas → 200).
 - El front carga y autentica; `assets/fonts/*.woff2` responden 200.
 - Export a PDF de una hoja de vida larga (varias páginas legibles).
@@ -188,9 +192,8 @@ npm run build:staging      # usa environment.staging.ts -> https://apitest.cst-c
 - Login en https://test... responde y guarda el token.
 - En Network, las llamadas van a https://apitest.cst-colombia.com.co/api/...
 - Respuesta CORS con Access-Control-Allow-Origin: https://test.cst-colombia.com.co
-- Si aparece mixed content o url() en http, confiar el proxy de Hostinger:
-  - Laravel 12 (rama `chore/laravel-12`): en `bootstrap/app.php`, `$middleware->trustProxies(at: '*')`.
-  - Laravel 10 (rama `main`): en `app/Http/Middleware/TrustProxies.php`, `protected $proxies = '*';`.
+- Si aparece mixed content o url() en http, confiar el proxy de Hostinger: en
+  `bootstrap/app.php` (Laravel 12), `$middleware->trustProxies(at: '*')`.
 
 ## 9. Document root y seguridad (IMPORTANTE)
 
@@ -374,8 +377,8 @@ Verificacion rapida (ver seccion 4): login POST 200, header `X-Request-Id`, `/ar
 Ambos repos ejecutan CI en cada push/PR (`.github/workflows/ci.yml`). **Desplegar solo con CI en verde.**
 
 - **Backend** (`cst`): PHP 8.2 + extensiones, `composer install`, `php artisan test`,
-  `composer audit --no-dev` (marcado `continue-on-error` mientras `main` siga en Laravel 10;
-  la rama `chore/laravel-12` pasa el audit limpio).
+  `composer audit --no-dev` (aún con `continue-on-error: true`; con Laravel 12 ya en `main`
+  el audit pasa limpio y puede endurecerse a `false`).
 - **Frontend** (`front_cst`): Node 20, `npm ci`, lint, build, tests headless
   (`ChromeHeadlessCI` definido en `karma.conf.js`), `npm audit --omit=dev --audit-level=high`.
 

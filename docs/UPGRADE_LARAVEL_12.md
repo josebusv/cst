@@ -1,6 +1,7 @@
 # Upgrade Laravel 10 -> 12 LTS
 
-> **Estado: EJECUTADO** en la rama `chore/laravel-12` (framework **12.69.2**).
+> **Estado: EJECUTADO y MERGEADO a `main`** (2026-10-24, fast-forward; framework **12.69.2**).
+> Origen: rama `chore/laravel-12`.
 > Verificacion: **53/53 tests**, **PHPStan 0 errores**, `composer audit --no-dev` limpio,
 > login **200** y contrato de error `{message, code, error}` intacto. Detalle en "Verificacion".
 

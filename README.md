@@ -7,6 +7,14 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Proyecto CST — Documentación
+
+- **Despliegue (backend + frontend):** [DEPLOY.md](DEPLOY.md)
+- Contrato de la API: `docs/API_CONTRACT.md`
+- Observabilidad y alertas: `docs/OBSERVABILIDAD.md`
+- Upgrade a Laravel 12: `docs/UPGRADE_LARAVEL_12.md`
+- Reset de contraseña: `DOCUMENTACION_PASSWORD_RESET.md`
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

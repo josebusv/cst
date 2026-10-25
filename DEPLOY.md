@@ -1,6 +1,24 @@
 # Despliegue en Hostinger (Laravel + Angular)
 
 Guía para el backend (`cst`) y el frontend (`front_cst`).
+Guía específica del frontend: `front_cst/DEPLOY.md`.
+
+> Última revisión: 2026-10-24 (tras el upgrade a Laravel 12 en la rama `chore/laravel-12`).
+
+## 0. Requisitos y estado de versiones
+
+| Componente | Requisito | Nota |
+|---|---|---|
+| PHP (servidor) | >= 8.2 | Servidor actual: 8.2.33. La rama `main` (Laravel 10) funciona con >= 8.1 |
+| Laravel | `main`: 10.x · `chore/laravel-12`: 12.x | Upgrade a 12 **ejecutado** en la rama `chore/laravel-12`, **pendiente de merge/push a `main`** (ver `docs/UPGRADE_LARAVEL_12.md`) |
+| Composer | 2.x | En el servidor: `composer install --no-dev --optimize-autoloader` |
+| MySQL/MariaDB | Según plan Hostinger | Credenciales en `.env` (`DB_*`) |
+| Node.js (build front) | ^20.19.0 \|\| ^22.12.0 \|\| ^24.0.0 | npm >= 9 |
+| SSH + rsync | Para los scripts de deploy | `deploy.local.sh` (no versionado) con `SSH_HOST`/`SSH_PATH` |
+
+> Los scripts de deploy actualizan el código con `git pull --ff-only` **sobre la rama que tenga
+> checked out el servidor** (normalmente `main`). Verifica la rama antes de desplegar:
+> `ssh usuario@host "cd /ruta/cst && git branch --show-current"`.
 
 ## 1. Configuración de producción (`.env`)
 
@@ -12,6 +30,18 @@ APP_FRONTEND_URL=https://cst-colombia.com.co
 LOG_LEVEL=warning
 LOG_CHANNEL=errors
 LOG_DAILY_DAYS=20
+
+# Autenticación JWT (OBLIGATORIO: sin JWT_SECRET el login responde 500)
+# Generar con: php artisan jwt:secret
+JWT_SECRET=
+
+# Base de datos (MySQL del plan Hostinger)
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=...
+DB_USERNAME=...
+DB_PASSWORD=...
 
 # Observabilidad: alertas de error (configura UNO de estos; opcional)
 LOG_ALERT_LEVEL=error
@@ -28,8 +58,20 @@ QUEUE_CONNECTION=sync
 
 > Si el plan es VPS/Cloud con Redis, usar `redis` en los tres.
 > `config/imagen_proxy.php` solo permite hosts derivados de `APP_URL`/`APP_FRONTEND_URL`.
+> Correo (reset de contraseña): configurar `MAIL_*` con SMTP real; ver
+> `DOCUMENTACION_PASSWORD_RESET.md` (desarrollo local: `CONFIGURACION_MAILPIT.md`).
 
 ## 2. Backend (`cst`)
+
+Primera instalación (antes de los comandos de deploy):
+
+```bash
+cp .env.example .env              # completar DB_*, MAIL_*, APP_URL, APP_FRONTEND_URL
+php artisan key:generate
+php artisan jwt:secret            # genera JWT_SECRET (obligatorio para el login)
+```
+
+Deploy / actualización:
 
 ```bash
 composer install --no-dev --optimize-autoloader
@@ -58,8 +100,11 @@ npm run build
 
 O usar el script existente: `bash deploy.sh <usuario@host> <ruta_public_html>`.
 
+> Guía detallada del frontend (entornos, scripts, `.htaccess`, verificación): `front_cst/DEPLOY.md`.
+
 ## 4. Verificación post-despliegue
 
+- `GET https://api…/up` responde 200 (health check; solo en la rama Laravel 12, `bootstrap/app.php`).
 - `GET https://api…/api/auth/login` responde (POST con credenciales válidas → 200).
 - El front carga y autentica; `assets/fonts/*.woff2` responden 200.
 - Export a PDF de una hoja de vida larga (varias páginas legibles).
@@ -74,7 +119,8 @@ O usar el script existente: `bash deploy.sh <usuario@host> <ruta_public_html>`.
 
 ## 6. Checklist pre-producción
 
-- [ ] `APP_DEBUG=false` y `LOG_CHANNEL=daily`.
+- [ ] `APP_DEBUG=false` y `LOG_CHANNEL=errors` (stack que incluye `daily`).
+- [ ] `JWT_SECRET` definida (`php artisan jwt:secret`).
 - [ ] `php artisan optimize` ejecutado.
 - [ ] Backup de BD antes de migrar.
 - [ ] `php artisan migrate --force` sin pendientes.
@@ -116,6 +162,7 @@ APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://apitest.cst-colombia.com.co
 APP_FRONTEND_URL=https://test.cst-colombia.com.co
+JWT_SECRET=<php artisan jwt:secret>
 LOG_CHANNEL=errors
 LOG_LEVEL=warning
 LOG_DAILY_DAYS=20
@@ -141,7 +188,9 @@ npm run build:staging      # usa environment.staging.ts -> https://apitest.cst-c
 - Login en https://test... responde y guarda el token.
 - En Network, las llamadas van a https://apitest.cst-colombia.com.co/api/...
 - Respuesta CORS con Access-Control-Allow-Origin: https://test.cst-colombia.com.co
-- Si aparece mixed content o url() en http, configurar TrustProxies ($proxies = '*') por el proxy de Hostinger.
+- Si aparece mixed content o url() en http, confiar el proxy de Hostinger:
+  - Laravel 12 (rama `chore/laravel-12`): en `bootstrap/app.php`, `$middleware->trustProxies(at: '*')`.
+  - Laravel 10 (rama `main`): en `app/Http/Middleware/TrustProxies.php`, `protected $proxies = '*';`.
 
 ## 9. Document root y seguridad (IMPORTANTE)
 
@@ -218,7 +267,8 @@ curl -s -X PUT https://apitest.cst-colombia.com.co/api/auth/equipos/<ID>/hoja-vi
 
 ## 11. Comandos de despliegue (preproduccion y produccion)
 
-> Requiere acceso SSH. En cada repo crea `deploy.local.sh` (no versionado) con:
+> Requiere acceso SSH. En cada repo crea `deploy.local.sh` (no versionado; ignorado vía
+> `.gitignore` en ambos repos) con:
 > ```bash
 > SSH_HOST="u123456789@cst-colombia.com.co"
 > SSH_PATH="/home/u123456789/domains/<dominio>/<carpeta>"
@@ -318,4 +368,14 @@ php artisan optimize
 ```
 
 Verificacion rapida (ver seccion 4): login POST 200, header `X-Request-Id`, `/artisan` responde 404.
+
+## 12. CI (GitHub Actions)
+
+Ambos repos ejecutan CI en cada push/PR (`.github/workflows/ci.yml`). **Desplegar solo con CI en verde.**
+
+- **Backend** (`cst`): PHP 8.2 + extensiones, `composer install`, `php artisan test`,
+  `composer audit --no-dev` (marcado `continue-on-error` mientras `main` siga en Laravel 10;
+  la rama `chore/laravel-12` pasa el audit limpio).
+- **Frontend** (`front_cst`): Node 20, `npm ci`, lint, build, tests headless
+  (`ChromeHeadlessCI` definido en `karma.conf.js`), `npm audit --omit=dev --audit-level=high`.
 
